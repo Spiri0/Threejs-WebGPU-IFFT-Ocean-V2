@@ -12,13 +12,13 @@ export const IFFT_VerticalWGSL = wgslFn(`
         step: f32,
     ) -> void {
 
-        var posX = f32(index) % size;
-        var posY = floor(f32(index) / size);
-        var idx = vec2i(i32(posX), i32(posY));
+        var posX = index % u32(size);
+        var posY = index / u32(size);
+        var idx = vec2u(posX, posY);
 
-        var data = textureLoad(butterfly, vec2<i32>(i32(step), idx.y), 0);
-        var even = textureLoad(readTex, vec2<i32>(idx.x, i32(data.z)), 0).rg;
-        var odd = textureLoad(readTex, vec2<i32>(idx.x, i32(data.w)), 0).rg;
+        var data = textureLoad(butterfly, vec2<u32>(u32(step), idx.y), 0);
+        var even = textureLoad(readTex, vec2<u32>(idx.x, u32(data.z)), 0).rg;
+        var odd = textureLoad(readTex, vec2<u32>(idx.x, u32(data.w)), 0).rg;
 
         var H: vec2<f32> = even + multiplyComplex(data.rg, odd.xy);
 
