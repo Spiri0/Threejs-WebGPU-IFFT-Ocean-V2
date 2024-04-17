@@ -10,9 +10,9 @@ export const InitialSpectrumWithInverseWGSL = wgslFn(`
         size: f32,
     ) -> void {
 
-        var posX = f32(index) % size;
-        var posY = floor(f32(index) / size);
-        var idx = vec2u(u32(posX), u32(posY));
+        var posX = index % u32(size);
+        var posY = index / u32(size);
+        var idx = vec2u(posX, posY);
  
         var h0k = textureLoad(readSpectrum, idx, 0).xy;
         var h0MinusK = textureLoad(readSpectrum, vec2<u32>((u32(size) - idx.x) % u32(size), (u32(size) - idx.y) % u32(size)), 0);
