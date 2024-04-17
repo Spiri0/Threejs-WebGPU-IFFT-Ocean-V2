@@ -39,8 +39,8 @@ export const InitialSpectrumWGSL = wgslFn(`
 	
         var xy = vec2<f32>(f32(posX), f32(posY));
         let deltaK = 2.0 * PI / waveLength;
-        let nx = posX - size / 2.0;
-        let nz = posY - size / 2.0;
+        let nx = f32(posX) - size / 2.0;
+        let nz = f32(posY) - size / 2.0;
         let k = vec2<f32>(nx, nz) * deltaK;
         let kLength = length(k);
 
