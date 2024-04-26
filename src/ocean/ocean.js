@@ -162,7 +162,7 @@ export const ocean = (() => {
 			this.cubeCamera.update(this.params_.renderer, this.params_.scene);
 
 
-			document.getElementById("testfield1").value = Object.keys(this.cubeRenderTarget.texture);
+			//document.getElementById("testfield1").value = Object.keys(this.cubeRenderTarget.texture);
 
 			/*
 			const cameraDistance = cameraPosition.length();
