@@ -256,8 +256,8 @@ export const wave_cascade = (() => {
             this.params_.renderer.compute(this.computeTurbulenceTexture, this.defaultWorkgroup);
 
 
-            document.getElementById("testfield4").value = this.params_.clock.elapsedTime;
-            document.getElementById("testfield5").value = this.params_.clock.getDelta();
+            //document.getElementById("testfield4").value = this.params_.clock.elapsedTime;
+            //document.getElementById("testfield5").value = this.params_.clock.getDelta();
         }
 
         /*
