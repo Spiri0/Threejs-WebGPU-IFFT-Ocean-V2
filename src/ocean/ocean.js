@@ -59,25 +59,24 @@ export const ocean = (() => {
      
 
 		InitSky(params){
-
-            const sky = new skybox.Sky(params);
+			
+			const sky = new skybox.Sky(params);
 			sky.layers.set(2);
-            sky.scale.setScalar(500000);
+			sky.scale.setScalar(500000);
 			//sky.rotation.z = Math.PI/2;
 			params.scene.add(sky);
 
 			//this.scene_.add(sky);
 
-            
 			params.guiParams.sky = {
 				rayleigh: 3,
 				elevation: 2,
 				azimuth: 180,
 				turbidity: 10,
-                mieCoefficient: 0.005,
-                mieDirectionalG: 0.7,
-                up: new THREE.Vector3(0, 1, 0),
-                exposure: 1
+				mieCoefficient: 0.005,
+				mieDirectionalG: 0.7,
+				up: new THREE.Vector3(0, 1, 0),
+				exposure: 1
 			}
 
 			sky.material.colorNode.parameters.turbidity.value = params.guiParams.sky.turbidity;
@@ -162,32 +161,20 @@ export const ocean = (() => {
 			this.cubeCamera.update(this.params_.renderer, this.params_.scene);
 
 
-			//document.getElementById("testfield1").value = Object.keys(this.cubeRenderTarget.texture);
-
-			/*
-			const cameraDistance = cameraPosition.length();
-			document.getElementById("testfield1").value = cameraPosition.x;
-			document.getElementById("testfield2").value = cameraPosition.y;
-			document.getElementById("testfield3").value = cameraPosition.z;
-			document.getElementById("testfield4").value = cameraDistance;
-			document.getElementById("testfield5").value = cameraPosition.y - scenePosition.y;
-			*/
-
-
 			this.builder_.Update();
-      		if (!this.builder_.Busy) {
+			if (!this.builder_.Busy) {
 				for (let k in this.chunks_) {
-          			this.chunks_[k].chunk.Show();
-        		}
-        		this.UpdateVisibleChunks_Quadtree_(cameraPosition, scenePosition, relativeCameraPosition);       
-      		}
-
-      		for (let k in this.chunks_) {
+					this.chunks_[k].chunk.Show();
+				}
+				this.UpdateVisibleChunks_Quadtree_(cameraPosition, scenePosition, relativeCameraPosition);       
+			}
+			
+			for (let k in this.chunks_) {
 				this.chunks_[k].chunk.Update(relativeCameraPosition);
-      		}
-      		for (let c of this.builder_.old_) {
+			}
+			for (let c of this.builder_.old_) {
 				c.chunk.Update(relativeCameraPosition);
-      		}
+			}
 
 			this.material_.positionNode.parameters.cameraPosition.value = relativeCameraPosition;
 			this.material_.colorNode.parameters.cameraPosition.value = relativeCameraPosition;
@@ -250,17 +237,6 @@ export const ocean = (() => {
 
 			const allChunksLeft = utils.DictIntersection(newOceanChunks, recycle);
 
-			if (0) {
-				const partialRebuilds = {};
-				
-				for (let k in partialRebuilds) {
-					if (k in intersection) {
-						recycle.push(this.chunks_[k]);
-						delete intersection[k];
-						difference[k] = allChunks[k];
-					}
-				}
-			}
 
 			this.builder_.RetireChunks(recycle);
 
