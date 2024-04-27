@@ -34,10 +34,9 @@ class Main extends entity.Entity{
 	}
 
 	CreateGUI() {
-        	this.guiParams = {
-        	};
-        	this.gui_ = new GUI();
-        	this.gui_.close();
+		this.guiParams = {};
+		this.gui_ = new GUI();
+		this.gui_.close();
 	}
 
 	LoadControllers() {
@@ -96,54 +95,6 @@ class Main extends entity.Entity{
 		this.entityManager_.Add(this.ocean_, 'ocean');
 		
 		
-		const cubeTextureLoader = new THREE.CubeTextureLoader();
-		cubeTextureLoader.setPath('resources/textures/cube/sky/');
-		const cubeTex = cubeTextureLoader.load(['px.jpg', 'nx.jpg', 'py.jpg', 'ny.jpg', 'pz.jpg', 'nz.jpg']);
-		cubeTex.minFilter = THREE.LinearFilter;
-		cubeTex.magFilter = THREE.LinearFilter;
-		
-		
-		const fragmentStage = wgslFn(`
-  			fn fragmentStage2(
-            			position: vec3<f32>,
-            			texture1: texture_cube<f32>,
-            			sampler: sampler,
-        		) -> vec4<f32> {
-
-            			var texcoord = vec3<f32>(position.x, position.y, position.z);
-
-            			var color = textureSample(texture1, sampler, normalize(texcoord));
-          
-            			return color;
-			}
-		`);
-
-		
-		const materialParams = {
-			position: attribute("position"),
-			texture1: cubeTexture(this.ocean_.components_.OceanChunkManager.cubeRenderTarget.texture),
-			sampler: cubeTexture(this.ocean_.components_.OceanChunkManager.cubeRenderTarget.texture),
-			//texture1: cubeTexture(this.cubeRenderTarget.texture),
-			//sampler: cubeTexture(this.cubeRenderTarget.texture),           
-			//texture1: cubeTexture(cubeTex),
-			//sampler: cubeTexture(cubeTex),
-		}
-
-		const geometry = new THREE.BoxGeometry( 10, 10, 10 );
-        	const material2 = new MeshBasicNodeMaterial();
-		material2.colorNode = fragmentStage(materialParams);
-		material2.side = THREE.DoubleSide;
-
-		const cube2 = new THREE.Mesh(geometry, material2);
-		cube2.position.set(0, 15, -50);
-		cube2.rotation.z = -Math.PI/2;
-		//this.scene_.add(cube2);
-		//this.scene_.background = cubeTexture;
-
-
-
-
-		//----------------------------------------------------------------------------------
 		//--------------------------------------------------------------------------------------
 	}
 
@@ -188,7 +139,6 @@ class Main extends entity.Entity{
 		this.player.Update(timeElapsedS);//hack, just a fast implementation
 		this.entityManager_.Update(timeElapsedS, 0);
 	}
-
 
 }
 
