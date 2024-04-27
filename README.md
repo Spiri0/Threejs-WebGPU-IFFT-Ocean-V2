@@ -8,3 +8,7 @@ Since the mipmaps are exhausted after approx. 20km, the IFFT Ocean currently tra
 I don't have all the parameters in the controls that could be adjusted. I only included the most important ones.
 
 Important: In order for the live server to work here on github, I had to deactivate the SharedArrayBuffers in the ocean worker and use ArrayBuffers for it. I also had to deactivate the coi-serviceworker in the index.html. The coi-serviceworker is important for the SharedArrayBuffers. So if you download the repo I recommend using the SharedArrayBuffers and the coi-serviceworker. This is significantly more efficient.
+
+If you have a powerful graphics card you can set the TEXTURE_SIZE in src/waves/wave_constants.js from 128 to 256 or 512. This makes a very big difference in the details.
+
+In src/ocean/ocean_constants.js you can use QT_OCEAN_MIN_CELL_RESOLUTION to have a higher resolution of the wireframe (even numbers only!).
