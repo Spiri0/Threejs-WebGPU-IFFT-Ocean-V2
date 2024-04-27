@@ -5,33 +5,36 @@ const _P = new THREE.Vector3();
 
 
 class OceanBuilderThreadedWorker {
-    constructor() {
-    }
+	constructor() {
+	}
 
-    Init(params) {
-        this.cachedParams_ = {...params};
-        this.params_ = params;
-        this.params_.offset = new THREE.Vector3(...params.offset);
-    }
+	Init(params) {
+		this.cachedParams_ = {...params};
+		this.params_ = params;
+		this.params_.offset = new THREE.Vector3(...params.offset);
+	}
 
 	//the indices for the bufferGeometry triangle vertices ccw (right hand coordinate system)
-    GenerateIndices_() {
-        const resolution = this.params_.resolution;
-        const indices = [];
-        for (let i = 0; i < resolution; i++) {
-            for (let j = 0; j < resolution; j++) {
-                indices.push(
-                i * (resolution + 1) + j,
-                (i + 1) * (resolution + 1) + j + 1,
-                i * (resolution + 1) + j + 1);
-                indices.push(
-                (i + 1) * (resolution + 1) + j,
-                (i + 1) * (resolution + 1) + j + 1,
-                i * (resolution + 1) + j);
-            }
-        }
-        return indices;
-    }
+	GenerateIndices_() {
+		const resolution = this.params_.resolution;
+        	const indices = [];
+		
+		for (let i = 0; i < resolution; i++) {
+			for (let j = 0; j < resolution; j++) {
+				indices.push(
+					i * (resolution + 1) + j,
+					(i + 1) * (resolution + 1) + j + 1,
+					i * (resolution + 1) + j + 1
+				);
+				indices.push(
+					(i + 1) * (resolution + 1) + j,
+					(i + 1) * (resolution + 1) + j + 1,
+					i * (resolution + 1) + j
+				);
+			}
+		}
+		return indices;
+	}
 
 	Build() {
 		const positions = [];
