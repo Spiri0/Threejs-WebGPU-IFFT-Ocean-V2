@@ -243,8 +243,8 @@ export const wave_cascade = (() => {
 			this.computeTimeSpectrum.computeNode.parameters.time.value = this.params_.clock.elapsedTime;
 			this.params_.renderer.compute(this.computeTimeSpectrum, this.defaultWorkgroup);
 
-			this.IFFT({...this.params_, direction: "y"});
 			this.IFFT({...this.params_, direction: "x"});
+			this.IFFT({...this.params_, direction: "y"});
 			this.IFFT({...this.params_, direction: "z"});
 			this.IFFT({...this.params_, direction: "w"});
 
