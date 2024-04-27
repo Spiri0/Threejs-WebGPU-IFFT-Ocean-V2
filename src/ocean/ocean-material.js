@@ -111,7 +111,7 @@ export const ocean_material = (() => {
 	}
 
 	return {
-        	OceanMaterial: OceanMaterial
+		OceanMaterial: OceanMaterial
 	}
 
 })();
