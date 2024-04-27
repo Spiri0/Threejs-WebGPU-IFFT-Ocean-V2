@@ -49,7 +49,6 @@ class Main extends entity.Entity{
 		this.scene_ = threejs.GetComponent('ThreeJSController').scene_;
 		this.camera_ = threejs.GetComponent('ThreeJSController').camera_;
 		this.renderer_ = threejs.GetComponent('ThreeJSController').threejs_;
-		//this.composer_ = threejs.GetComponent('ThreeJSController').composer_;  //depracted (webgl)
 		this.threejs_ = threejs.GetComponent('ThreeJSController');
 		
 		const basicParams = {
@@ -65,7 +64,8 @@ class Main extends entity.Entity{
 		this.player = new BasicController(basicParams);
 		
 		
-		//------------------------------IFFT-Wave-Generator----------------------------------
+		//------------------------------IFFT-Wave-Generator---------------------------------
+		
 		const WaveGenerator_ = new entity.Entity();
 		WaveGenerator_.AddComponent(
 			new wave_generator.WaveGenerator({
@@ -95,7 +95,7 @@ class Main extends entity.Entity{
 		this.entityManager_.Add(this.ocean_, 'ocean');
 		
 		
-		//--------------------------------------------------------------------------------------
+		//----------------------------------------------------------------------------------
 	}
 
 
