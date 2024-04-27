@@ -3,21 +3,21 @@ import {wgslFn} from "three/nodes";
 
 export const TimeSpectrumWGSL = wgslFn(`
 
-	fn computeWGSL( 
-    	writeDxDz: texture_storage_2d<rgba32float, write>,
+	fn computeWGSL(
+ 		writeDxDz: texture_storage_2d<rgba32float, write>,
 		writeDyDxz: texture_storage_2d<rgba32float, write>,
 		writeDyxDyz: texture_storage_2d<rgba32float, write>,
 		writeDxxDzz: texture_storage_2d<rgba32float, write>,
 		readSpectrum: texture_2d<f32>,
 		readWaveData: texture_2d<f32>,
-    	index: u32,
-    	size: f32,
+		index: u32,
+		size: f32,
 		time: f32,
 	) -> void {
 
-    	var posX = index % u32(size);
-    	var posY = index / u32(size);
-    	var idx = vec2u(posX, posY);
+		var posX = index % u32(size);
+		var posY = index / u32(size);
+		var idx = vec2u(posX, posY);
 
 
 		var wave = textureLoad(readWaveData, idx, 0);
