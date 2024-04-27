@@ -10,19 +10,19 @@ export const ocean_chunk = (() => {
 		}
     
 		Destroy() {
-    		this.params_.group.remove(this.mesh_);
-    	}
+			this.params_.group.remove(this.mesh_);
+		}
 
-    	Hide() {
-    		this.mesh_.visible = false;
-    	}
+		Hide() {
+			this.mesh_.visible = false;
+		}
 
-    	Show() {
-    		this.mesh_.visible = true;
-    	}
+		Show() {
+			this.mesh_.visible = true;
+		}
 
-    	Init(params) {
-    		this.geometry_ = new THREE.BufferGeometry();
+		Init(params) {
+			this.geometry_ = new THREE.BufferGeometry();
 			this.mesh_ = new THREE.Mesh(this.geometry_, params.material);
 
 			//bigger boundingSphere for frustum because waves can move the mesh out of the frustum
@@ -40,21 +40,21 @@ export const ocean_chunk = (() => {
 			this.mesh_.geometry.boundingSphere = boundingSphere;
 			this.mesh_.geometry.computeBoundingSphere();
 
-    		this.mesh_.castShadow = false;
+			this.mesh_.castShadow = false;
 			this.mesh_.layers.set(params.layer);
-    		this.mesh_.receiveShadow = true;
-    		this.params_.group.add(this.mesh_);
-    		this.Reinit(params);     
-    	}
+			this.mesh_.receiveShadow = true;
+			this.params_.group.add(this.mesh_);
+			this.Reinit(params);     
+		}
 
-    	Update() {
+		Update() {
 
-    	}
+		}
 
-    	Reinit(params) {
-    		this.params_ = params;
-    		this.mesh_.position.set(0, 0, 0);
-    	}
+		Reinit(params) {
+			this.params_ = params;
+			this.mesh_.position.set(0, 0, 0);
+		}
 
 		SetWireframe(b) {
 			this.mesh_.material.wireframe = b;
@@ -77,7 +77,8 @@ export const ocean_chunk = (() => {
 	}
 
 	return {
-    	OceanChunk: OceanChunk
+    		OceanChunk: OceanChunk
 	}
+	
 })();
 
