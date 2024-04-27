@@ -260,8 +260,8 @@ export const wave_cascade = (() => {
 
 		IFFT(params){
 
-			if(params.direction == "y")params.renderer.compute(this.computeInitStorageTextureY, this.defaultWorkgroup);
 			if(params.direction == "x")params.renderer.compute(this.computeInitStorageTextureX, this.defaultWorkgroup);
+			if(params.direction == "y")params.renderer.compute(this.computeInitStorageTextureY, this.defaultWorkgroup);
 			if(params.direction == "z")params.renderer.compute(this.computeInitStorageTextureZ, this.defaultWorkgroup);
 			if(params.direction == "w")params.renderer.compute(this.computeInitStorageTextureW, this.defaultWorkgroup);
 
@@ -281,8 +281,8 @@ export const wave_cascade = (() => {
 				params.renderer.compute(pingpong ? this.computeVerticalPing : this.computeVerticalPong, this.defaultWorkgroup);
 			}
  
-			if(params.direction == "y")params.renderer.compute(this.computePermuteY, this.defaultWorkgroup);       
-			if(params.direction == "x")params.renderer.compute(this.computePermuteX, this.defaultWorkgroup);
+			if(params.direction == "x")params.renderer.compute(this.computePermuteX, this.defaultWorkgroup);       
+			if(params.direction == "y")params.renderer.compute(this.computePermuteY, this.defaultWorkgroup);
 			if(params.direction == "z")params.renderer.compute(this.computePermuteZ, this.defaultWorkgroup);
 			if(params.direction == "w")params.renderer.compute(this.computePermuteW, this.defaultWorkgroup);
 		}
