@@ -16,17 +16,17 @@ import {skybox} from './ocean/sky.js';
 
 class Main extends entity.Entity{
 	constructor(){
-        	super();
+		super();
 	}
 
-	async Initialize() {  
+	async Initialize() {
 		this.entityManager_ = new entity_manager.EntityManager();
-        	this.entityManager_.Add(this, 'main');
+		this.entityManager_.Add(this, 'main');
 		this.OnGameStarted();
 	}
 
 	OnGameStarted() {
-        	this.CreateGUI();
+		this.CreateGUI();
 		this.clock_ = new THREE.Clock();
 		this.LoadControllers();
 		this.previousRAF = null;
@@ -41,75 +41,70 @@ class Main extends entity.Entity{
 	}
 
 	LoadControllers() {
-  
+		
 		const threejs = new entity.Entity();
-    		threejs.AddComponent(new threejs_component.ThreeJSController());
-    		this.entityManager_.Add(threejs, 'threejs');
-
-        
+		threejs.AddComponent(new threejs_component.ThreeJSController());
+		this.entityManager_.Add(threejs, 'threejs');
+		
+		
 		this.scene_ = threejs.GetComponent('ThreeJSController').scene_;
-    		this.camera_ = threejs.GetComponent('ThreeJSController').camera_;
-        	this.renderer_ = threejs.GetComponent('ThreeJSController').threejs_;
+		this.camera_ = threejs.GetComponent('ThreeJSController').camera_;
+		this.renderer_ = threejs.GetComponent('ThreeJSController').threejs_;
 		//this.composer_ = threejs.GetComponent('ThreeJSController').composer_;  //depracted (webgl)
-        	this.threejs_ = threejs.GetComponent('ThreeJSController');
-
+		this.threejs_ = threejs.GetComponent('ThreeJSController');
+		
 		const basicParams = {
 			scene: this.scene_,
 			camera: this.camera_,
-            		threejs: this.threejs_,
-            		renderer: this.renderer_
+			threejs: this.threejs_,
+			renderer: this.renderer_
 		};
-
-        	this.camera_.position.set(0, 6, 0);
-        	this.camera_.rotation.x = -0.1 * Math.PI;
-        	this.scene_.position.set(0, 0, 0);
-        	this.player = new BasicController(basicParams);
-
-
-        	//------------------------------------------------------------------------------------
-
-
+		
+		this.camera_.position.set(0, 6, 0);
+		this.camera_.rotation.x = -0.1 * Math.PI;
+		this.scene_.position.set(0, 0, 0);
+		this.player = new BasicController(basicParams);
+		
+		
 		//------------------------------IFFT-Wave-Generator----------------------------------
 		const WaveGenerator_ = new entity.Entity();
 		WaveGenerator_.AddComponent(
 			new wave_generator.WaveGenerator({
-                		...basicParams,
+				...basicParams,
 				clock: this.clock_,
-                		gui: this.gui_,
-     	    		})
-        	);
+				gui: this.gui_,
+			})
+		);
 		this.entityManager_.Add(WaveGenerator_, 'waveGenerator');
-
+		
 		//----------------------------Multithreading-CDLOD-Ocean----------------------------
-        
+		
 		this.ocean_ = new entity.Entity();
 		this.ocean_.AddComponent(
 			new ocean.OceanChunkManager({
-                		...basicParams,
+				...basicParams,
 				sunpos: new THREE.Vector3(100000, 0, 100000), // not in use at moment, hardcoded in the shader
 				clock: this.clock_,
-                		waveGenerator: WaveGenerator_.components_.WaveGenerator, 
-                		layer: 0,
-                		depthTexture: this.threejs_.depthTexture,
-                		gui: this.gui_,
-                		guiParams: this.guiParams,
-                		mySampler: this.mySampler
-     	    		})
-        	);
+				waveGenerator: WaveGenerator_.components_.WaveGenerator, 
+				layer: 0,
+				depthTexture: this.threejs_.depthTexture,
+				gui: this.gui_,
+				guiParams: this.guiParams,
+				mySampler: this.mySampler
+			})
+		);
 		this.entityManager_.Add(this.ocean_, 'ocean');
-
-
-
-
+		
+		
 		const cubeTextureLoader = new THREE.CubeTextureLoader();
-        	cubeTextureLoader.setPath('resources/textures/cube/sky/');
-        	const cubeTex = cubeTextureLoader.load(['px.jpg', 'nx.jpg', 'py.jpg', 'ny.jpg', 'pz.jpg', 'nz.jpg']);
-        	cubeTex.minFilter = THREE.LinearFilter;
-        	cubeTex.magFilter = THREE.LinearFilter;
-
-
-        	const fragmentStage = wgslFn(`
-        		fn fragmentStage2(
+		cubeTextureLoader.setPath('resources/textures/cube/sky/');
+		const cubeTex = cubeTextureLoader.load(['px.jpg', 'nx.jpg', 'py.jpg', 'ny.jpg', 'pz.jpg', 'nz.jpg']);
+		cubeTex.minFilter = THREE.LinearFilter;
+		cubeTex.magFilter = THREE.LinearFilter;
+		
+		
+		const fragmentStage = wgslFn(`
+  			fn fragmentStage2(
             			position: vec3<f32>,
             			texture1: texture_cube<f32>,
             			sampler: sampler,
@@ -123,6 +118,7 @@ class Main extends entity.Entity{
 			}
 		`);
 
+		
 		const materialParams = {
 			position: attribute("position"),
 			texture1: cubeTexture(this.ocean_.components_.OceanChunkManager.cubeRenderTarget.texture),
