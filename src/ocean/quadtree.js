@@ -25,7 +25,7 @@ export const quadtree = (() => {
 			}
 		
 			const node = this.root.quadtree.root_;		
-    }
+		}
 
 
 		GetChildren() {  
@@ -222,62 +222,67 @@ export const quadtree = (() => {
 
 
 
-    	_CreateChildren(child) {
-    
-    		const midpoint = child.bounds.getCenter(new THREE.Vector3());
-
-    		// Bottom left
-    		const b1 = new THREE.Box3(child.bounds.min, midpoint);
-    		// Bottom right
-    		const b2 = new THREE.Box3(
-    		new THREE.Vector3(midpoint.x, child.bounds.min.y, 0),
-    		new THREE.Vector3(child.bounds.max.x, midpoint.y, 0));
-    		// Top left
-    		const b3 = new THREE.Box3(
-    		new THREE.Vector3(child.bounds.min.x, midpoint.y, 0),
-    		new THREE.Vector3(midpoint.x, child.bounds.max.y, 0));
-    		// Top right
-    		const b4 = new THREE.Box3(midpoint, child.bounds.max);
-
-
-    		const children = [b1, b2, b3, b4].map(
-        		b => {
-        			return {
-            		bounds: b,
-            		children: [],
-            		parent: child,
-            		center: b.getCenter(new THREE.Vector3()),
-            		size: b.getSize(new THREE.Vector3()),
-					newCenter: null
-            	};
-          	});
-
-      		const nodes = [];
-      		for (let c of children) {  
-        		c.newCenter = c.center.clone();
-        		c.newCenter.applyMatrix4(this._params.localToWorld);
-        		const n = new Node();
-        
+		_CreateChildren(child) {
+			
+			const midpoint = child.bounds.getCenter(new THREE.Vector3());
+			
+			// Bottom left
+			const b1 = new THREE.Box3(child.bounds.min, midpoint);
+			// Bottom right
+			const b2 = new THREE.Box3(
+				new THREE.Vector3(midpoint.x, child.bounds.min.y, 0),
+				new THREE.Vector3(child.bounds.max.x, midpoint.y, 0)
+			);
+			
+			// Top left
+			const b3 = new THREE.Box3(
+				new THREE.Vector3(child.bounds.min.x, midpoint.y, 0),
+				new THREE.Vector3(midpoint.x, child.bounds.max.y, 0)
+			);
+			
+			// Top right
+			const b4 = new THREE.Box3(midpoint, child.bounds.max);
+			
+			const children = [b1, b2, b3, b4].map(
+				b => {
+					return {
+						bounds: b,
+						children: [],
+						parent: child,
+						center: b.getCenter(new THREE.Vector3()),
+						size: b.getSize(new THREE.Vector3()),
+						newCenter: null
+					};
+				}
+			);
+			
+			const nodes = [];
+			for (let c of children) {  
+				c.newCenter = c.center.clone();
+				c.newCenter.applyMatrix4(this._params.localToWorld);
+				
+				const n = new Node();
+				
 				const transformedBounds = new THREE.Box3();
 				let newsize = c.size.clone();
 				newsize.applyMatrix4(this._params.localToWorld);
 				newsize = new THREE.Vector3(Math.abs(newsize.x), Math.abs(newsize.y), Math.abs(newsize.z));
 				transformedBounds.setFromCenterAndSize(c.newCenter, newsize);
-
-        		n.bounds = c.bounds;
+				
+				n.bounds = c.bounds;
 				n.newBounds = transformedBounds;
-        		n.children = [];
-        		n.parent = child;
-        		n.tree = this;
-        		n.center = c.center;
-        		n.newCenter = c.newCenter;
-        		n.size = c.size;
+				n.children = [];
+				n.parent = child;
+				n.tree = this;
+				n.center = c.center;
+				n.newCenter = c.newCenter;
+				n.size = c.size;
 				n.lod = null;
-        		n.localToWorld = child.localToWorld;
-    			nodes.push(n);
-    		}
-
-    		return nodes;
+				n.localToWorld = child.localToWorld;
+				nodes.push(n);
+			}
+			
+			return nodes;
 		}
 	}
 
