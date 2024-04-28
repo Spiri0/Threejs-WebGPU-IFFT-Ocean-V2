@@ -142,7 +142,7 @@ export const vertexStageWGSL = (() => {
         var delta: f32 = max - min;
         var factor: f32 = (dist - min)/delta;
 
-        var startpercent: f32 = 0.5;
+        var startpercent: f32 = 0.71;
         var endpercent: f32 = 0.95;
 
         if(lod == n){
