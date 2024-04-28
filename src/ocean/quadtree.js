@@ -204,7 +204,7 @@ export const quadtree = (() => {
 
 		_Insert(child, pos, lodRadii, lodBuckets) {
 	
-			const factor = 4;
+			const factor = 2;
 			const lodCenter = pos;
 			const closestPoint = new THREE.Vector3();
 			child.newBounds.clampPoint(lodCenter, closestPoint);
