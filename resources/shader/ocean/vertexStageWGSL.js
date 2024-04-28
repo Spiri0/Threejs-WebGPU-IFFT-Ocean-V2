@@ -112,7 +112,6 @@ export const vertexStageWGSL = (() => {
 
     fn getMorphValue(cameraPosition: vec3<f32>, position: vec3<f32>, minLodRadius: f32, lod: f32) -> f32 {
 
-        var percent: f32 = 0.5;
         var height: f32 = cameraPosition.y -position.y;
         var eyeDist: f32 = distance(position, cameraPosition);
         var phi: f32 = acos(height/eyeDist);
