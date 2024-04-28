@@ -135,7 +135,7 @@ class Main extends entity.Entity{
       
       
 	Step(timeElapsed) { 
-		const timeElapsedS = Math.min(1.0 / 60.0, timeElapsed * 0.001);
+		const timeElapsedS = Math.min(1.0 / 50.0, timeElapsed * 0.001);
 		this.player.Update(timeElapsedS);//hack, just a fast implementation
 		this.entityManager_.Update(timeElapsedS, 0);
 	}
