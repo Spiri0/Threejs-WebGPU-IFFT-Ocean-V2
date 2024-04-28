@@ -62,7 +62,7 @@ export const wave_constants = (() => {
 		LENGTH_SCALES: [809.017, 250, 25.7514, 4.984],
 		//LENGTH_SCALES: [1209.017, 550, 125.7514, 84.984],
 		//LENGTH_SCALES: [2000, 1000, 500, 250],
-		LAMBDA: [0.9, 0.9, 0.9, 0.9],
+		LAMBDA: [0.8, 0.8, 0.8, 0.8],
 		FOAM_STRENGTH: uniform(0.9),
 		FOAM_THRESHOLD: uniform(3.6),
 		FIRST_WAVE_DATASET,
