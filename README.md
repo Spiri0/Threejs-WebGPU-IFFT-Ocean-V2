@@ -12,3 +12,5 @@ Important: In order for the live server to work here on github, I had to deactiv
 If you have a powerful graphics card you can set the TEXTURE_SIZE in src/waves/wave_constants.js from 128 to 256 or 512. This makes a very big difference in the details.
 
 In src/ocean/ocean_constants.js you can use QT_OCEAN_MIN_CELL_RESOLUTION to have a higher resolution of the wireframe (even numbers only!).
+
+I will continue to develop the ocean. In three.js there were further advances in the renderer that increase efficiency.
