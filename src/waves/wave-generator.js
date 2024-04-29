@@ -115,9 +115,9 @@ export const wave_generator = (() => {
 		}
 
 
-		Update(_) {
+		Update(dt) {
 			for(let i = 0; i < this.cascades.length; i++){
-				this.cascades[i].Update();
+				this.cascades[i].Update(dt);
 			}
 		}
 
