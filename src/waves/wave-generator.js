@@ -71,7 +71,7 @@ export const wave_generator = (() => {
 				this.InitCascades();
 				this.UpdateOceanMaterial();
 			});
-			waveSet3.add(wave_constants.FOAM_THRESHOLD, "value", 0, 10).step(0.1).onChange((value) => {
+			waveSet3.add(wave_constants.FOAM_THRESHOLD, "value", 0, 5).step(0.1).onChange((value) => {
 				wave_constants.FOAM_THRESHOLD.value = value;
 				this.InitCascades();
 				this.UpdateOceanMaterial();
