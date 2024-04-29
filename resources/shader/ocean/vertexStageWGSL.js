@@ -43,7 +43,7 @@ export const vertexStageWGSL = (() => {
         var lod2DetailThreshold: f32 = 0.15;
         var lod3DetailThreshold: f32 = 0.15;
 
-        var lod0: f32 = 1;
+        var lod0: f32 = select(1.0, cameraPosition.y/lodHeightThreshold, cameraPosition.y > lodHeightThreshold);
         var lod1: f32 = select(lod2DetailThreshold, lod2DetailThreshold + (1 - lod1DetailThreshold) * (lodHeightThreshold - cameraPosition.y)/lodHeightThreshold, cameraPosition.y < lodHeightThreshold);
         var lod2: f32 = select(lod2DetailThreshold, lod2DetailThreshold + (1 - lod2DetailThreshold) * (lodHeightThreshold - cameraPosition.y)/lodHeightThreshold, cameraPosition.y < lodHeightThreshold);
         var lod3: f32 = select(lod3DetailThreshold, lod3DetailThreshold + (1 - lod3DetailThreshold) * (lodHeightThreshold - cameraPosition.y)/lodHeightThreshold, cameraPosition.y < lodHeightThreshold);
