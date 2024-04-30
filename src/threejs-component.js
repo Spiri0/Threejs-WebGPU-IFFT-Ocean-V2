@@ -44,6 +44,9 @@ export const threejs_component = (() => {
 			this.threejs_.setClearColor( 0x87CEEB );
 
 
+			window.addEventListener('resize', () => {
+				this.OnResize_();	
+			}, false );
 		}
 
 
@@ -61,16 +64,9 @@ export const threejs_component = (() => {
     
 		OnResize_() {
 		
-			let width, height;
+			const width = this.container.clientWidth;
+			const height = this.container.clientHeight;
 		
-			if(window.innerWidth > window.innerHeight){	
-				width = 1.0 * window.innerWidth;
-				height = 1.0 * window.innerHeight;				
-			}		
-			if(window.innerHeight > window.innerWidth){	
-				width = 1.0 * window.innerWidth;
-				height = 1.0 * window.innerHeight;				
-			}		
 			this.camera_.aspect = width / height;
 			this.camera_.updateProjectionMatrix();
 			this.threejs_.setSize(width, height);	
