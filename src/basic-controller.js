@@ -95,7 +95,7 @@ class BasicController {
 	Init(params) {
 		this.params = params;
 		this.decceleration = new THREE.Vector3(-30.0, -30.0, -30.0);
-		this.acceleration = new THREE.Vector3(1, 0.4, 1000.0);
+		this.acceleration = new THREE.Vector3(1, 0.3, 500.0);
 		this.velocity = new THREE.Vector3(0, 0, 0);
 
 		this.input = new BasicControllerInput();
