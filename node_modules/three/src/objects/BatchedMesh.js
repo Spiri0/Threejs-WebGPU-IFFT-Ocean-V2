@@ -152,6 +152,7 @@ class BatchedMesh extends Mesh {
 		this._multiDrawCounts = new Int32Array( maxGeometryCount );
 		this._multiDrawStarts = new Int32Array( maxGeometryCount );
 		this._multiDrawCount = 0;
+		this._multiDrawInstances = null;
 		this._visibilityChanged = true;
 
 		// Local matrix per geometry by using data texture
@@ -195,8 +196,7 @@ class BatchedMesh extends Mesh {
 				const { array, itemSize, normalized } = srcAttribute;
 
 				const dstArray = new array.constructor( maxVertexCount * itemSize );
-				const dstAttribute = new srcAttribute.constructor( dstArray, itemSize, normalized );
-				dstAttribute.setUsage( srcAttribute.usage );
+				const dstAttribute = new BufferAttribute( dstArray, itemSize, normalized );
 
 				geometry.setAttribute( attributeName, dstAttribute );
 
@@ -223,7 +223,7 @@ class BatchedMesh extends Mesh {
 
 	}
 
-	// Make sure the geometry is compatible with the existing combined geometry atributes
+	// Make sure the geometry is compatible with the existing combined geometry attributes
 	_validateGeometry( geometry ) {
 
 		// check that the geometry doesn't have a version of our reserved id attribute
@@ -514,6 +514,7 @@ class BatchedMesh extends Mesh {
 			}
 
 			dstAttribute.needsUpdate = true;
+			dstAttribute.addUpdateRange( vertexStart * itemSize, vertexCount * itemSize );
 
 		}
 
@@ -537,6 +538,7 @@ class BatchedMesh extends Mesh {
 			}
 
 			dstIndex.needsUpdate = true;
+			dstIndex.addUpdateRange( indexStart, reservedRange.indexCount );
 
 		}
 
@@ -589,6 +591,28 @@ class BatchedMesh extends Mesh {
 		this._visibilityChanged = true;
 
 		return this;
+
+	}
+
+	getInstanceCountAt( id ) {
+
+		if ( this._multiDrawInstances === null ) return null;
+
+		return this._multiDrawInstances[ id ];
+
+	}
+
+	setInstanceCountAt( id, instanceCount ) {
+
+		if ( this._multiDrawInstances === null ) {
+
+			this._multiDrawInstances = new Int32Array( this._maxGeometryCount ).fill( 1 );
+
+		}
+
+		this._multiDrawInstances[ id ] = instanceCount;
+
+		return id;
 
 	}
 

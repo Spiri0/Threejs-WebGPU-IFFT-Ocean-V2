@@ -62,13 +62,17 @@ export const ocean_chunk = (() => {
 
 
 		RebuildMeshFromData(data) {
+			
 			this.geometry_.setAttribute('position', new THREE.Float32BufferAttribute(data.positions, 3));
+			this.geometry_.setAttribute('normal', new THREE.Float32BufferAttribute(data.normals, 3));
 			this.geometry_.setAttribute('vindex', new THREE.Int32BufferAttribute(data.vindices, 1));
 			this.geometry_.setAttribute('width', new THREE.Float32BufferAttribute(data.width, 1));
 			this.geometry_.setAttribute('lod', new THREE.Int32BufferAttribute(data.lod, 1));
 			this.geometry_.setIndex(new THREE.BufferAttribute(data.indices, 1));
       
+
 			this.geometry_.attributes.position.needsUpdate = true;
+			this.geometry_.attributes.normal.needsUpdate = true;
 			this.geometry_.attributes.vindex.needsUpdate = true;
 			this.geometry_.attributes.width.needsUpdate = true;
 			this.geometry_.attributes.lod.needsUpdate = true;

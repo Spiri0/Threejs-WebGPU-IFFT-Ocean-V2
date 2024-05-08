@@ -132,9 +132,9 @@ export const fragmentStageWGSL = wgslFn(`
         oceanColor = mix(oceanColor, vec3<f32>(1), foam_mix_factor);
 
 
-        oceanColor = mix(oceanColor, SEACOLOR*1 + SKYCOLOR*0.2, smoothstep(5000, 10000, vViewDist));
-        if(vViewDist > 10000){
-            oceanColor = SEACOLOR*1 + SKYCOLOR*0.2;
+        oceanColor = mix(oceanColor, SEACOLOR * 1 + SKYCOLOR * 0.2, smoothstep(1000, 5000, vViewDist));
+        if(vViewDist > 5000){
+            oceanColor = SEACOLOR * 1 + SKYCOLOR * 0.2;
         }
 
 
@@ -322,68 +322,3 @@ export const fragmentStageWGSL = wgslFn(`
 
 
 `);
-
-
-/*
-//(smoothstep(1-texelWidth, 1, uv.x));
-//(1-(smoothstep(0, texelWidth, uv.x)))
-//var alpha = (1-(smoothstep(0, texelWidth, uv2.x))) + (smoothstep(1-texelWidth, 1, uv2.x));
-        //var alpha = (1-(smoothstep(0.5-texelWidth, 0.5, uv2.x)));// + (smoothstep(0.5-texelWidth, 0.5, uv2.x));
-
-
-        var alpha2 = (1-(smoothstep(0, texelWidth, uv.x))) + (smoothstep(1-texelWidth, 1, uv.x));
-
-        var col: vec4<f32> = textureSample(derivatives2, derivatives2_sampler, vec2<f32>(1-texelWidth, uv.y)) * ( step(1-texelWidth, uv.x) * ( 1-0.5*smoothstep(1-texelWidth, 1,  uv.x)) + 0.5*(1-(smoothstep(0, texelWidth, uv.x))) ) +
-        textureSample(derivatives2, derivatives2_sampler, vec2<f32>(texelWidth, uv.y)) * ( 0.5*(smoothstep(1-texelWidth, 1, uv.x)) + (1-step(texelWidth, uv.x))*(0.5 + 0.5*(smoothstep(0, texelWidth, uv.x)))  ) ;
-
-
-
-
-
-*/
-/*  
-        var Normal_0: vec4<f32> = findNearestTexelsAndInterpolate(derivatives0, vTexelCoord0, ifftResolution) * vCascadeScales.x;
-        var Normal_1: vec4<f32> = findNearestTexelsAndInterpolate(derivatives1, vTexelCoord1, ifftResolution) * vCascadeScales.y;
-        var Normal_2: vec4<f32> = findNearestTexelsAndInterpolate(derivatives2, vTexelCoord2, ifftResolution) * vCascadeScales.z;
-        var Normal_3: vec4<f32> = findNearestTexelsAndInterpolate(derivatives3, vTexelCoord3, ifftResolution) * vCascadeScales.w;
-*/
-/*
-        var Normal_0: vec4<f32> = textureSample(derivatives0, derivatives0_sampler, (vMorphedPosition.xz/waveLengths.x)) * vCascadeScales.x;
-        var Normal_1: vec4<f32> = textureSample(derivatives1, derivatives1_sampler, (vMorphedPosition.xz/waveLengths.y)) * vCascadeScales.y;
-        var Normal_2: vec4<f32> = textureSample(derivatives2, derivatives2_sampler, (vMorphedPosition.xz/waveLengths.z)) * vCascadeScales.z;
-        var Normal_3: vec4<f32> = textureSample(derivatives3, derivatives3_sampler, (vMorphedPosition.xz/waveLengths.w)) * vCascadeScales.w;
-*/
-/*
-        var Normal_0: vec4<f32> = customTextureSample(derivatives0, derivatives0_sampler, (vMorphedPosition.xz/waveLengths.x));
-        var Normal_1: vec4<f32> = customTextureSample(derivatives1, derivatives1_sampler, (vMorphedPosition.xz/waveLengths.y));
-        var Normal_2: vec4<f32> = customTextureSample(derivatives2, derivatives2_sampler, (vMorphedPosition.xz/waveLengths.z));
-        var Normal_3: vec4<f32> = customTextureSample(derivatives3, derivatives3_sampler, (vMorphedPosition.xz/waveLengths.w));
-*/
-
-
-       
-        /*
-        Normal_1 = mix(Normal_1, vec4<f32>(0), smoothstep(4000, 15000, vViewDist));
-        Normal_2 = mix(Normal_2, vec4<f32>(0), smoothstep(3000, 5000, vViewDist));
-        Normal_3 = mix(Normal_3, vec4<f32>(0), smoothstep(3000, 5000, vViewDist));
-        */
-/*
-        //depthTexture: texture_depth_2d,
-        var r = 0.;
-        var g = 0.;
-        var b = 0.;
-
-        if(lod == 0 || lod == 3 || lod == 6 || lod == 9 || lod == 12 ){
-            r = 1.;
-            g = 0.05;
-            b = 0.05;
-        }
-        if(lod == 1 || lod == 4 || lod == 7 || lod == 10 || lod == 13 ){
-            g = 1.;
-        }				
-        if(lod == 2 || lod == 5 || lod == 8 || lod == 11 || lod == 14 ){
-            r = 0.05;
-            g = 0.05;
-            b = 1.;
-        }
-*/

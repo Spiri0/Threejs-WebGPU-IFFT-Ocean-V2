@@ -7,10 +7,8 @@ import { BasicController } from './basic-controller.js';
 import {ocean} from './ocean/ocean.js';
 import {wave_generator} from './waves/wave-generator.js';
 
-import { testFS } from "../resources/shader/boxMaterial.js";
-import {RGBMLoader} from './three-defs.js';
 
-import {skybox} from './ocean/sky.js';
+
 
 
 
@@ -25,10 +23,11 @@ class Main extends entity.Entity{
 		this.OnGameStarted();
 	}
 
-	OnGameStarted() {
+	async OnGameStarted() {
 		this.CreateGUI();
 		this.clock_ = new THREE.Clock();
-		this.LoadControllers();
+		this.deltaTime = 0;
+		await this.LoadControllers();
 		this.previousRAF = null;
 		this.RAF();
 	}
@@ -39,7 +38,7 @@ class Main extends entity.Entity{
 		this.gui_.close();
 	}
 
-	LoadControllers() {
+	async LoadControllers() {
 		
 		const threejs = new entity.Entity();
 		threejs.AddComponent(new threejs_component.ThreeJSController());
@@ -51,6 +50,10 @@ class Main extends entity.Entity{
 		this.renderer_ = threejs.GetComponent('ThreeJSController').threejs_;
 		this.threejs_ = threejs.GetComponent('ThreeJSController');
 		
+
+		await this.renderer_.init();
+
+
 		const basicParams = {
 			scene: this.scene_,
 			camera: this.camera_,
@@ -106,36 +109,34 @@ class Main extends entity.Entity{
 		this.camera_.position.set(0, 0, 0);       
 	}
 
-
+	
 
 	RAF() {
 	
-		requestAnimationFrame((t) => {
+		requestAnimationFrame( (t) => {
 			if (this.previousRAF === null) {
 				this.previousRAF = t;
 			} 
 			else {
-				this.Step(t - this.previousRAF);
- 
+				this.deltaTime = this.clock_.getDelta();
+
 				const cameraDistance = this.camera_.position.length();
 				if(cameraDistance >= 5000){
 					this.MoveCameraToOrigin();
 				}
                 
-
+				this.Step(this.deltaTime);
 				this.threejs_.Render();
 				this.previousRAF = t;
 			}
-    
-			setTimeout(() => {
-				this.RAF();
-			}, 1);
+
+			this.RAF();
 		});
 	}
       
       
 	Step(timeElapsed) { 
-		const timeElapsedS = Math.min(1.0 / 50.0, timeElapsed * 0.001);
+		const timeElapsedS = timeElapsed;//Math.min(1 / 50, timeElapsed );
 		this.player.Update(timeElapsedS);//hack, just a fast implementation
 		this.entityManager_.Update(timeElapsedS, 0);
 	}

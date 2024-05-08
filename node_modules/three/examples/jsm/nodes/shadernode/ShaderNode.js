@@ -456,6 +456,8 @@ const ConvertType = function ( type, cacheMap = null ) {
 
 // exports
 
+export const defined = ( value ) => value && value.value;
+
 // utils
 
 export const getConstNodeType = ( value ) => ( value !== undefined && value !== null ) ? ( value.nodeType || value.convertTo || ( typeof value === 'string' ? value : null ) ) : null;
@@ -473,14 +475,6 @@ export const nodeObjects = ( val, altType = null ) => new ShaderNodeObjects( val
 export const nodeArray = ( val, altType = null ) => new ShaderNodeArray( val, altType );
 export const nodeProxy = ( ...params ) => new ShaderNodeProxy( ...params );
 export const nodeImmutable = ( ...params ) => new ShaderNodeImmutable( ...params );
-
-export const shader = ( jsFunc ) => { // @deprecated, r154
-
-	console.warn( 'TSL: shader() is deprecated. Use tslFn() instead.' );
-
-	return new ShaderNode( jsFunc );
-
-};
 
 export const tslFn = ( jsFunc ) => {
 
@@ -555,7 +549,7 @@ addNodeElement( 'append', append );
 export const color = new ConvertType( 'color' );
 
 export const float = new ConvertType( 'float', cacheMaps.float );
-export const int = new ConvertType( 'int', cacheMaps.int );
+export const int = new ConvertType( 'int', cacheMaps.ints );
 export const uint = new ConvertType( 'uint', cacheMaps.uint );
 export const bool = new ConvertType( 'bool', cacheMaps.bool );
 

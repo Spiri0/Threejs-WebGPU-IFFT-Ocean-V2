@@ -1,6 +1,6 @@
 import DataMap from './DataMap.js';
 import Color4 from './Color4.js';
-import { Mesh, SphereGeometry, BackSide } from 'three';
+import { Mesh, SphereGeometry, BackSide, LinearSRGBColorSpace } from 'three';
 import { vec4, context, normalWorld, backgroundBlurriness, backgroundIntensity, NodeMaterial, modelViewProjection } from '../../nodes/Nodes.js';
 
 const _clearColor = new Color4();
@@ -27,14 +27,14 @@ class Background extends DataMap {
 
 			// no background settings, use clear color configuration from the renderer
 
-			renderer._clearColor.getRGB( _clearColor, this.renderer.currentColorSpace );
+			renderer._clearColor.getRGB( _clearColor, LinearSRGBColorSpace );
 			_clearColor.a = renderer._clearColor.a;
 
 		} else if ( background.isColor === true ) {
 
 			// background is an opaque color
 
-			background.getRGB( _clearColor, this.renderer.currentColorSpace );
+			background.getRGB( _clearColor, LinearSRGBColorSpace );
 			_clearColor.a = 1;
 
 			forceClear = true;
@@ -50,11 +50,11 @@ class Background extends DataMap {
 
 			if ( backgroundMesh === undefined ) {
 
-				const backgroundMeshNode = context( vec4( backgroundNode ), {
+				const backgroundMeshNode = context( vec4( backgroundNode ).mul( backgroundIntensity ), {
 					// @TODO: Add Texture2D support using node context
 					getUV: () => normalWorld,
 					getTextureLevel: () => backgroundBlurriness
-				} ).mul( backgroundIntensity );
+				} );
 
 				let viewProj = modelViewProjection();
 				viewProj = viewProj.setZ( viewProj.w );
@@ -83,7 +83,7 @@ class Background extends DataMap {
 
 			if ( sceneData.backgroundCacheKey !== backgroundCacheKey ) {
 
-				sceneData.backgroundMeshNode.node = vec4( backgroundNode );
+				sceneData.backgroundMeshNode.node = vec4( backgroundNode ).mul( backgroundIntensity );
 
 				backgroundMesh.material.needsUpdate = true;
 

@@ -248,13 +248,10 @@ export const wave_cascade = (() => {
 			this.IFFT({...this.params_, direction: "z"});
 			this.IFFT({...this.params_, direction: "w"});
 
-			this.computeMergeTextures.computeNode.parameters.deltaTime.value = 250 * Math.exp(-1 * this.params_.clock.elapsedTime) + 250*this.params_.clock.getDelta();
+			this.computeMergeTextures.computeNode.parameters.deltaTime.value = dt;
 			this.params_.renderer.compute(this.computeMergeTextures, this.defaultWorkgroup);
 			this.params_.renderer.compute(this.computeTurbulenceTexture, this.defaultWorkgroup);
 
-
-			//document.getElementById("testfield4").value = this.params_.clock.elapsedTime;
-			//document.getElementById("testfield5").value = this.params_.clock.getDelta();
 		}
 
 

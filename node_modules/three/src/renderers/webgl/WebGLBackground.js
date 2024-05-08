@@ -4,11 +4,15 @@ import { PlaneGeometry } from '../../geometries/PlaneGeometry.js';
 import { ShaderMaterial } from '../../materials/ShaderMaterial.js';
 import { Color } from '../../math/Color.js';
 import { ColorManagement } from '../../math/ColorManagement.js';
+import { Euler } from '../../math/Euler.js';
+import { Matrix4 } from '../../math/Matrix4.js';
 import { Mesh } from '../../objects/Mesh.js';
 import { ShaderLib } from '../shaders/ShaderLib.js';
 import { cloneUniforms, getUnlitUniformColorSpace } from '../shaders/UniformsUtils.js';
 
 const _rgb = { r: 0, b: 0, g: 0 };
+const _e1 = /*@__PURE__*/ new Euler();
+const _m1 = /*@__PURE__*/ new Matrix4();
 
 function WebGLBackground( renderer, cubemaps, cubeuvmaps, state, objects, alpha, premultipliedAlpha ) {
 
@@ -22,9 +26,8 @@ function WebGLBackground( renderer, cubemaps, cubeuvmaps, state, objects, alpha,
 	let currentBackgroundVersion = 0;
 	let currentTonemapping = null;
 
-	function render( renderList, scene ) {
+	function getBackground( scene ) {
 
-		let forceClear = false;
 		let background = scene.isScene === true ? scene.background : null;
 
 		if ( background && background.isTexture ) {
@@ -33,6 +36,15 @@ function WebGLBackground( renderer, cubemaps, cubeuvmaps, state, objects, alpha,
 			background = ( usePMREM ? cubeuvmaps : cubemaps ).get( background );
 
 		}
+
+		return background;
+
+	}
+
+	function render( scene ) {
+
+		let forceClear = false;
+		const background = getBackground( scene );
 
 		if ( background === null ) {
 
@@ -62,6 +74,12 @@ function WebGLBackground( renderer, cubemaps, cubeuvmaps, state, objects, alpha,
 			renderer.clear( renderer.autoClearColor, renderer.autoClearDepth, renderer.autoClearStencil );
 
 		}
+
+	}
+
+	function addToRenderList( renderList, scene ) {
+
+		const background = getBackground( scene );
 
 		if ( background && ( background.isCubeTexture || background.mapping === CubeUVReflectionMapping ) ) {
 
@@ -105,10 +123,24 @@ function WebGLBackground( renderer, cubemaps, cubeuvmaps, state, objects, alpha,
 
 			}
 
+			_e1.copy( scene.backgroundRotation );
+
+			// accommodate left-handed frame
+			_e1.x *= - 1; _e1.y *= - 1; _e1.z *= - 1;
+
+			if ( background.isCubeTexture && background.isRenderTargetTexture === false ) {
+
+				// environment maps which are not cube render targets or PMREMs follow a different convention
+				_e1.y *= - 1;
+				_e1.z *= - 1;
+
+			}
+
 			boxMesh.material.uniforms.envMap.value = background;
 			boxMesh.material.uniforms.flipEnvMap.value = ( background.isCubeTexture && background.isRenderTargetTexture === false ) ? - 1 : 1;
 			boxMesh.material.uniforms.backgroundBlurriness.value = scene.backgroundBlurriness;
 			boxMesh.material.uniforms.backgroundIntensity.value = scene.backgroundIntensity;
+			boxMesh.material.uniforms.backgroundRotation.value.setFromMatrix4( _m1.makeRotationFromEuler( _e1 ) );
 			boxMesh.material.toneMapped = ColorManagement.getTransfer( background.colorSpace ) !== SRGBTransfer;
 
 			if ( currentBackground !== background ||
@@ -229,7 +261,8 @@ function WebGLBackground( renderer, cubemaps, cubeuvmaps, state, objects, alpha,
 			setClear( clearColor, clearAlpha );
 
 		},
-		render: render
+		render: render,
+		addToRenderList: addToRenderList
 
 	};
 

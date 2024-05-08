@@ -95,7 +95,7 @@ class BasicController {
 	Init(params) {
 		this.params = params;
 		this.decceleration = new THREE.Vector3(-30.0, -30.0, -30.0);
-		this.acceleration = new THREE.Vector3(1, 0.5, 2500.0);
+		this.acceleration = new THREE.Vector3(1, 0.4, 1000.0);
 		this.velocity = new THREE.Vector3(0, 0, 0);
 
 		this.input = new BasicControllerInput();
@@ -130,7 +130,7 @@ class BasicController {
 		if (this.input.keys.side) {	//strave
 			velocity.x = 5 * acc.z * timeInSeconds * this.input.keys.side;   
 		}
-*/
+		*/
       if (this.input.keys.side) {
         _A.set(0, 1, 0);
         _Q.setFromAxisAngle(_A, -Math.PI * timeInSeconds * acc.y * this.input.keys.side);

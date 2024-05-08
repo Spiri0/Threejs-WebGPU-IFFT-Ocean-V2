@@ -1,8 +1,8 @@
 import DataMap from '../DataMap.js';
 import ChainMap from '../ChainMap.js';
 import NodeBuilderState from './NodeBuilderState.js';
-import { NoToneMapping, EquirectangularReflectionMapping, EquirectangularRefractionMapping } from 'three';
-import { NodeFrame, objectGroup, renderGroup, frameGroup, cubeTexture, texture, rangeFog, densityFog, reference, toneMapping, equirectUV, viewportBottomLeft, normalWorld } from '../../../nodes/Nodes.js';
+import { EquirectangularReflectionMapping, EquirectangularRefractionMapping, NoToneMapping, SRGBColorSpace } from 'three';
+import { NodeFrame, vec4, objectGroup, renderGroup, frameGroup, cubeTexture, texture, rangeFog, densityFog, reference, viewportBottomLeft, normalWorld, pmremTexture, viewportTopLeft } from '../../../nodes/Nodes.js';
 
 class Nodes extends DataMap {
 
@@ -113,7 +113,7 @@ class Nodes extends DataMap {
 				nodeBuilder.lightsNode = renderObject.lightsNode;
 				nodeBuilder.environmentNode = this.getEnvironmentNode( renderObject.scene );
 				nodeBuilder.fogNode = this.getFogNode( renderObject.scene );
-				nodeBuilder.toneMappingNode = this.getToneMappingNode();
+				nodeBuilder.clippingContext = renderObject.clippingContext;
 				nodeBuilder.build();
 
 				nodeBuilderState = this._createNodeBuilderState( nodeBuilder );
@@ -205,14 +205,6 @@ class Nodes extends DataMap {
 
 	}
 
-	getToneMappingNode() {
-
-		if ( this.isToneMappingState === false ) return null;
-
-		return this.renderer.toneMappingNode || this.get( this.renderer ).toneMappingNode || null;
-
-	}
-
 	getCacheKey( scene, lightsNode ) {
 
 		const chain = [ scene, lightsNode ];
@@ -224,14 +216,12 @@ class Nodes extends DataMap {
 
 			const environmentNode = this.getEnvironmentNode( scene );
 			const fogNode = this.getFogNode( scene );
-			const toneMappingNode = this.getToneMappingNode();
 
 			const cacheKey = [];
 
 			if ( lightsNode ) cacheKey.push( lightsNode.getCacheKey() );
 			if ( environmentNode ) cacheKey.push( environmentNode.getCacheKey() );
 			if ( fogNode ) cacheKey.push( fogNode.getCacheKey() );
-			if ( toneMappingNode ) cacheKey.push( toneMappingNode.getCacheKey() );
 
 			cacheKeyData = {
 				callId,
@@ -251,45 +241,12 @@ class Nodes extends DataMap {
 		this.updateEnvironment( scene );
 		this.updateFog( scene );
 		this.updateBackground( scene );
-		this.updateToneMapping();
 
 	}
 
 	get isToneMappingState() {
 
-		const renderer = this.renderer;
-		const renderTarget = renderer.getRenderTarget();
-
-		return renderTarget && renderTarget.isCubeRenderTarget ? false : true;
-
-	}
-
-	updateToneMapping() {
-
-		const renderer = this.renderer;
-		const rendererData = this.get( renderer );
-		const rendererToneMapping = renderer.toneMapping;
-
-		if ( this.isToneMappingState && rendererToneMapping !== NoToneMapping ) {
-
-			if ( rendererData.toneMapping !== rendererToneMapping ) {
-
-				const rendererToneMappingNode = rendererData.rendererToneMappingNode || toneMapping( rendererToneMapping, reference( 'toneMappingExposure', 'float', renderer ) );
-				rendererToneMappingNode.toneMapping = rendererToneMapping;
-
-				rendererData.rendererToneMappingNode = rendererToneMappingNode;
-				rendererData.toneMappingNode = rendererToneMappingNode;
-				rendererData.toneMapping = rendererToneMapping;
-
-			}
-
-		} else {
-
-			// Don't delete rendererData.rendererToneMappingNode
-			delete rendererData.toneMappingNode;
-			delete rendererData.toneMapping;
-
-		}
+		return this.renderer.getRenderTarget() ? false : true;
 
 	}
 
@@ -304,26 +261,13 @@ class Nodes extends DataMap {
 
 				let backgroundNode = null;
 
-				if ( background.isCubeTexture === true ) {
+				if ( background.isCubeTexture === true || ( background.mapping === EquirectangularReflectionMapping || background.mapping === EquirectangularRefractionMapping ) ) {
 
-					backgroundNode = cubeTexture( background, normalWorld );
+					backgroundNode = pmremTexture( background, normalWorld );
 
 				} else if ( background.isTexture === true ) {
 
-					let nodeUV = null;
-
-					if ( background.mapping === EquirectangularReflectionMapping || background.mapping === EquirectangularRefractionMapping ) {
-
-						nodeUV = equirectUV();
-						background.flipY = false;
-
-					} else {
-
-						nodeUV = viewportBottomLeft;
-
-					}
-
-					backgroundNode = texture( background, nodeUV ).setUpdateMatrix( true );
+					backgroundNode = texture( background, viewportBottomLeft ).setUpdateMatrix( true );
 
 				} else if ( background.isColor !== true ) {
 
@@ -439,6 +383,34 @@ class Nodes extends DataMap {
 	getNodeFrameForRender( renderObject ) {
 
 		return this.getNodeFrame( renderObject.renderer, renderObject.scene, renderObject.object, renderObject.camera, renderObject.material );
+
+	}
+
+	getOutputNode( outputTexture ) {
+
+		let output = texture( outputTexture, viewportTopLeft );
+
+		if ( this.isToneMappingState ) {
+
+			if ( this.renderer.toneMappingNode ) {
+
+				output = vec4( this.renderer.toneMappingNode.context( { color: output.rgb } ), output.a );
+
+			} else if ( this.renderer.toneMapping !== NoToneMapping ) {
+
+				output = output.toneMapping( this.renderer.toneMapping );
+
+			}
+
+		}
+
+		if ( this.renderer.currentColorSpace === SRGBColorSpace ) {
+
+			output = output.linearToColorSpace( this.renderer.currentColorSpace );
+
+		}
+
+		return output;
 
 	}
 
