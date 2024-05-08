@@ -112,22 +112,28 @@ class Main extends entity.Entity{
 	
 
 	RAF() {
-	
+
+		const frameTime = 1 / 30;
+		
 		requestAnimationFrame( (t) => {
 			if (this.previousRAF === null) {
 				this.previousRAF = t;
 			} 
 			else {
-				this.deltaTime = this.clock_.getDelta();
+				this.deltaTime += this.clock_.getDelta();
 
-				const cameraDistance = this.camera_.position.length();
-				if(cameraDistance >= 5000){
-					this.MoveCameraToOrigin();
-				}
+				if(this.deltaTime >= frameTime) {
+					const cameraDistance = this.camera_.position.length();
+					if(cameraDistance >= 5000){
+						this.MoveCameraToOrigin();
+					}
                 
-				this.Step(this.deltaTime);
-				this.threejs_.Render();
-				this.previousRAF = t;
+					this.Step(frameTime);
+					this.threejs_.Render();
+					this.previousRAF = t;
+
+					this.deltaTime -= frameTime;
+				}
 			}
 
 			this.RAF();
