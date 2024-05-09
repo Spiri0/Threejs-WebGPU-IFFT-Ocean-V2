@@ -26,7 +26,7 @@ class Main extends entity.Entity{
 	async OnGameStarted() {
 		this.CreateGUI();
 		this.clock_ = new THREE.Clock();
-		this.deltaTime = 0;
+		this.then = performance.now();
 		await this.LoadControllers();
 		this.previousRAF = null;
 		this.RAF();
@@ -113,27 +113,24 @@ class Main extends entity.Entity{
 
 	RAF() {
 
-		const frameTime = 1 / 30;
+		const dstFPS = 30;
+		const fpsInterval = 1000 / dstFPS;
 		
-		requestAnimationFrame( (t) => {
-			if (this.previousRAF === null) {
-				this.previousRAF = t;
-			} 
-			else {
-				this.deltaTime += this.clock_.getDelta();
+		requestAnimationFrame(() => {
+			const now = performance.now();
+			const elapsed = now - this.then;
+			
+			if(elapsed > fpsInterval) {
 
-				if(this.deltaTime >= frameTime) {
-					const cameraDistance = this.camera_.position.length();
-					if(cameraDistance >= 5000){
-						this.MoveCameraToOrigin();
-					}
-                
-					this.Step(frameTime);
-					this.threejs_.Render();
-					this.previousRAF = t;
-
-					this.deltaTime -= frameTime;
+				this.then = now - (elapsed % fpsInterval);
+				
+				const cameraDistance = this.camera_.position.length();
+				if(cameraDistance >= 5000){
+					this.MoveCameraToOrigin();
 				}
+                
+				this.Step(elapsed);
+				this.threejs_.Render();		
 			}
 
 			this.RAF();
@@ -142,8 +139,8 @@ class Main extends entity.Entity{
       
       
 	Step(timeElapsed) { 
-		const timeElapsedS = timeElapsed;//Math.min(1 / 50, timeElapsed );
-		this.player.Update(timeElapsedS);//hack, just a fast implementation
+		const timeElapsedS = timeElapsed / 1000;
+		this.player.Update(1 / 50);//hack, just a fast implementation
 		this.entityManager_.Update(timeElapsedS, 0);
 	}
 
