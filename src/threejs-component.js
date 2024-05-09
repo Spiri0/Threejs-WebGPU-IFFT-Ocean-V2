@@ -17,22 +17,23 @@ export const threejs_component = (() => {
 				throw new Error('Your Browser does not support WebGPU yet');
 			}
 
-			this.threejs_ = new WebGPURenderer({ 
+			this.renderer_ = new WebGPURenderer({ 
 				canvas: document.createElement('canvas'),
 				antialias: true,
+				forceWebGL: false
 			});
     	
-			this.threejs_.outputColorSpace = THREE.SRGBColorSpace;
-			this.threejs_.setPixelRatio(window.devicePixelRatio);
-			this.threejs_.shadowMap.enabled = true;
-			this.threejs_.shadowMap.type = THREE.PCFSoftShadowMap;
-			this.threejs_.physicallyCorrectLights = true;
-			this.threejs_.domElement.id = 'threejs';
+			this.renderer_.outputColorSpace = THREE.SRGBColorSpace;
+			this.renderer_.setPixelRatio(window.devicePixelRatio);
+			this.renderer_.shadowMap.enabled = true;
+			this.renderer_.shadowMap.type = THREE.PCFSoftShadowMap;
+			this.renderer_.physicallyCorrectLights = true;
+			this.renderer_.domElement.id = 'threejs';
 
 
 			this.container = document.getElementById('container');
-			this.threejs_.setSize(this.container.clientWidth, this.container.clientHeight);
-			this.container.appendChild( this.threejs_.domElement );
+			this.renderer_.setSize(this.container.clientWidth, this.container.clientHeight);
+			this.container.appendChild( this.renderer_.domElement );
 		
 
 			const aspect = this.container.clientWidth / this.container.clientHeight; 
@@ -41,7 +42,7 @@ export const threejs_component = (() => {
 			const far = 1E6;
 			this.camera_ = new THREE.PerspectiveCamera(fov, aspect, near, far);
 			this.scene_ = new THREE.Scene();
-			this.threejs_.setClearColor( 0x87CEEB );
+			this.renderer_.setClearColor( 0x87CEEB );
 
 
 			window.addEventListener('resize', () => {
@@ -53,7 +54,7 @@ export const threejs_component = (() => {
 		Render() {
 
 			this.camera_.layers.enableAll();
-			this.threejs_.render(this.scene_, this.camera_);
+			this.renderer_.render(this.scene_, this.camera_);
 		}
 
 
@@ -69,7 +70,7 @@ export const threejs_component = (() => {
 		
 			this.camera_.aspect = width / height;
 			this.camera_.updateProjectionMatrix();
-			this.threejs_.setSize(width, height);	
+			this.renderer_.setSize(width, height);	
 		}
   
   	}//end class
