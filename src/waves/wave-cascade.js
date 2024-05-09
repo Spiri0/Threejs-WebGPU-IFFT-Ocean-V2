@@ -240,7 +240,7 @@ export const wave_cascade = (() => {
 
 		Update(dt){
 
-			this.computeTimeSpectrum.computeNode.parameters.time.value = this.params_.clock.elapsedTime;
+			this.computeTimeSpectrum.computeNode.parameters.time.value = performance.now() / 1000;
 			this.params_.renderer.compute(this.computeTimeSpectrum, this.defaultWorkgroup);
 
 			this.IFFT({...this.params_, direction: "y"});
