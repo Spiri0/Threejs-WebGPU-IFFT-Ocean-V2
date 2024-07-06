@@ -11,6 +11,10 @@ export const ocean_chunk = (() => {
     
 		Destroy() {
 			this.params_.group.remove(this.mesh_);
+
+			this.mesh_.geometry.dispose();
+			this.mesh_.material.dispose();
+			this.mesh_ = null;
 		}
 
 		Hide() {
@@ -23,7 +27,7 @@ export const ocean_chunk = (() => {
 
 		Init(params) {
 			this.geometry_ = new THREE.BufferGeometry();
-			this.mesh_ = new THREE.Mesh(this.geometry_, params.material);
+			this.mesh_ = new THREE.Mesh(this.geometry_, params.material.clone());
 
 			//bigger boundingSphere for frustum because waves can move the mesh out of the frustum
 			const localToWorld = params.transform;
