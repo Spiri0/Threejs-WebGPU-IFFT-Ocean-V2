@@ -13,9 +13,9 @@
    
         <script type="importmap"> {
             "imports": {
-                "three": "./node_modules/three/build/three.module.js",
-                "three/addons/": "./node_modules/three/examples/jsm/",
-                "three/nodes": "./node_modules/three/examples/jsm/nodes/Nodes.js"
+                "three": "./node_modules/three/build/three.webgpu.js",
+                "three/tsl": "./node_modules/three/build/three.webgpu.js",
+                "three/addons/": "./node_modules/three/examples/jsm/"
             }
         }
         </script>
@@ -25,17 +25,6 @@
 
         <div id="container"></div>
         <script type="module" src="./src/index.js"></script>
-
-        <!--
-        <br>
-		<input type="text" id="testfield1" width="10">
-		<input type="text" id="testfield2" width="10">
-		<input type="text" id="testfield3" width="10">
-		<input type="text" id="testfield4" width="10">
-		<input type="text" id="testfield5" width="10">
-		<input type="text" id="testfield6" width="10">
-        <br>
-        -->
 
     </body>
 </html>

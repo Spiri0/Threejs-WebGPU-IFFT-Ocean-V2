@@ -1,6 +1,6 @@
 import {THREE} from '../three-defs.js';
 import {BackSide, BoxGeometry, Mesh, Vector3, DoubleSide} from 'three';
-import {MeshBasicNodeMaterial, MeshStandardNodeMaterial, wgslFn, uniform, attribute, varyingProperty, vec4} from 'three/nodes';
+import {MeshBasicNodeMaterial, MeshStandardNodeMaterial, wgslFn, uniform, attribute, varyingProperty, vec4} from 'three/tsl';
 import {vertexStageWGSL} from  '../../resources/shader/sky/vertexStageWGSL.js';
 import {fragmentStageWGSL} from  '../../resources/shader/sky/fragmentStageWGSL.js';
 

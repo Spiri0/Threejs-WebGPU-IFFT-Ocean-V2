@@ -1,5 +1,5 @@
-import {THREE, StorageTexture} from '../three-defs.js';
-import {textureStore, instanceIndex, uniform, texture} from "three/nodes";
+import {THREE} from '../three-defs.js';
+import {textureStore, instanceIndex, uniform, texture} from "three/tsl";
 import {entity} from '../entity.js';
 import {initial_spectrum} from './initial-spectrum.js';
 import {TimeSpectrumWGSL} from "../../resources/shader/IFFT/timeSpectrum.js";
@@ -30,12 +30,12 @@ export const wave_cascade = (() => {
 			this.h0k_Texture = this.initialSpectrum.h0k_Texture;
 
 
-			this.DxDz = new StorageTexture(params.size, params.size);
-			this.DyDxz = new StorageTexture(params.size, params.size);
-			this.DyxDyz = new StorageTexture(params.size, params.size);
-			this.DxxDzz = new StorageTexture(params.size, params.size);
-			this.pingTexture = new StorageTexture(params.size, params.size);
-			this.pongTexture = new StorageTexture(params.size, params.size);
+			this.DxDz = new THREE.StorageTexture(params.size, params.size);
+			this.DyDxz = new THREE.StorageTexture(params.size, params.size);
+			this.DyxDyz = new THREE.StorageTexture(params.size, params.size);
+			this.DxxDzz = new THREE.StorageTexture(params.size, params.size);
+			this.pingTexture = new THREE.StorageTexture(params.size, params.size);
+			this.pongTexture = new THREE.StorageTexture(params.size, params.size);
 
 			this.DxDz.type = THREE.FloatType;
 			this.DyDxz.type = THREE.FloatType;
@@ -53,10 +53,10 @@ export const wave_cascade = (() => {
 
             
             
-			this.displacement = new StorageTexture(params.size, params.size);
-			this.derivative = new StorageTexture(params.size, params.size);
-			this.turbulence = new StorageTexture(params.size, params.size);
-			this.jacobian = new StorageTexture(params.size, params.size);
+			this.displacement = new THREE.StorageTexture(params.size, params.size);
+			this.derivative = new THREE.StorageTexture(params.size, params.size);
+			this.turbulence = new THREE.StorageTexture(params.size, params.size);
+			this.jacobian = new THREE.StorageTexture(params.size, params.size);
 
 			this.displacement.type = THREE.HalfFloatType;
 			this.derivative.type = THREE.HalfFloatType;

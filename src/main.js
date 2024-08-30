@@ -1,13 +1,10 @@
-import {THREE, GUI, ShaderPass, FXAAShader, GLTFLoader} from './three-defs.js';
-import {ShaderNode, MeshBasicNodeMaterial, MeshStandardNodeMaterial, SpriteNodeMaterial, texture, cubeTexture, attribute, wgslFn} from "three/nodes";
+import {THREE, GUI} from './three-defs.js';
 import {entity} from './entity.js';
 import {entity_manager} from './entity-manager.js';
 import {threejs_component} from './threejs-component.js';
 import { BasicController } from './basic-controller.js';
 import {ocean} from './ocean/ocean.js';
 import {wave_generator} from './waves/wave-generator.js';
-
-
 
 
 

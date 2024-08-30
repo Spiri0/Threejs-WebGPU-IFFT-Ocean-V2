@@ -1,5 +1,5 @@
-import {THREE, StorageTexture} from '../three-defs.js';
-import {textureStore, instanceIndex} from "three/nodes";
+import {THREE} from '../three-defs.js';
+import {textureStore, instanceIndex} from "three/tsl";
 import {entity} from '../entity.js';
 
 import {wave_constants} from './wave-constants.js';
@@ -20,7 +20,7 @@ export const wave_generator = (() => {
  
 
 			this.size = wave_constants.TEXTURE_SIZE;
-			this.butterflyTexture = new StorageTexture(Math.log2(this.size), this.size);
+			this.butterflyTexture = new THREE.StorageTexture(Math.log2(this.size), this.size);
 			this.butterflyTexture.magFilter = this.butterflyTexture.minFilter = THREE.NearestFilter;
 			this.butterflyTexture.type = THREE.FloatType;
   

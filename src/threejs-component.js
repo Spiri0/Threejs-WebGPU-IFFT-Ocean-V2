@@ -1,5 +1,4 @@
-import {THREE, WebGPURenderer, WebGPU, RenderPass, ShaderPass, EffectComposer, CopyShader} from './three-defs.js';
-import {MeshBasicNodeMaterial, texture} from "three/nodes";
+import {THREE, WebGPU} from './three-defs.js';
 import {entity} from "./entity.js";
 
 
@@ -17,7 +16,7 @@ export const threejs_component = (() => {
 				throw new Error('Your Browser does not support WebGPU yet');
 			}
 
-			this.renderer_ = new WebGPURenderer({ 
+			this.renderer_ = new THREE.WebGPURenderer({ 
 				canvas: document.createElement('canvas'),
 				antialias: true,
 				forceWebGL: false

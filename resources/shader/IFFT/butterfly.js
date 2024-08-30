@@ -1,4 +1,4 @@
-import {wgslFn} from "three/nodes";
+import {wgslFn} from "three/tsl";
 
 
 export const butterflyWGSL = wgslFn(`

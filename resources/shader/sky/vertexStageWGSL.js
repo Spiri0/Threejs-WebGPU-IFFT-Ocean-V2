@@ -1,4 +1,4 @@
-import {wgslFn, varyingProperty} from "three/nodes";
+import {wgslFn, varyingProperty} from "three/tsl";
 
 
 export const vertexStageWGSL = (() => {

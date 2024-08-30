@@ -1,5 +1,5 @@
-import {THREE, StorageTexture} from '../three-defs.js';
-import {textureStore, instanceIndex, uniform, texture, vec2} from "three/nodes";
+import {THREE} from '../three-defs.js';
+import {textureStore, instanceIndex, uniform, texture, vec2} from "three/tsl";
 import {entity} from '../entity.js';
 import {InitialSpectrumWGSL} from "../../resources/shader/IFFT/initialSpectrum.js";
 import {InitialSpectrumWithInverseWGSL} from "../../resources/shader/IFFT/initialSpectrumWithInverse.js";
@@ -20,9 +20,9 @@ export const initial_spectrum = (() => {
 
 			this.defaultWorkgroup = wave_constants.DEFAULT_WORKGROUP;
 
-			this.spectrumTexture = new StorageTexture(params.size, params.size);    
-			this.waveDataTexture = new StorageTexture(params.size, params.size);
-			this.h0k_Texture = new StorageTexture(params.size, params.size); 
+			this.spectrumTexture = new THREE.StorageTexture(params.size, params.size);    
+			this.waveDataTexture = new THREE.StorageTexture(params.size, params.size);
+			this.h0k_Texture = new THREE.StorageTexture(params.size, params.size); 
 			this.spectrumTexture.magFilter = this.spectrumTexture.minFilter = THREE.NearestFilter;
 			this.waveDataTexture.magFilter = this.waveDataTexture.minFilter = THREE.NearestFilter;
 			this.h0k_Texture.magFilter = this.h0k_Texture.minFilter = THREE.NearestFilter;

@@ -192,6 +192,7 @@ function WebGLPrograms( renderer, cubemaps, cubeuvmaps, extensions, capabilities
 			precision: precision,
 
 			batching: IS_BATCHEDMESH,
+			batchingColor: IS_BATCHEDMESH && object._colorsTexture !== null,
 			instancing: IS_INSTANCEDMESH,
 			instancingColor: IS_INSTANCEDMESH && object.instanceColor !== null,
 			instancingMorph: IS_INSTANCEDMESH && object.morphTexture !== null,
@@ -336,7 +337,6 @@ function WebGLPrograms( renderer, cubemaps, cubeuvmaps, extensions, capabilities
 			shadowMapType: renderer.shadowMap.type,
 
 			toneMapping: toneMapping,
-			useLegacyLights: renderer._useLegacyLights,
 
 			decodeVideoTexture: HAS_MAP && ( material.map.isVideoTexture === true ) && ( ColorManagement.getTransfer( material.map.colorSpace ) === SRGBTransfer ),
 
@@ -351,7 +351,7 @@ function WebGLPrograms( renderer, cubemaps, cubeuvmaps, extensions, capabilities
 			index0AttributeName: material.index0AttributeName,
 
 			extensionClipCullDistance: HAS_EXTENSIONS && material.extensions.clipCullDistance === true && extensions.has( 'WEBGL_clip_cull_distance' ),
-			extensionMultiDraw: HAS_EXTENSIONS && material.extensions.multiDraw === true && extensions.has( 'WEBGL_multi_draw' ),
+			extensionMultiDraw: ( HAS_EXTENSIONS && material.extensions.multiDraw === true || IS_BATCHEDMESH ) && extensions.has( 'WEBGL_multi_draw' ),
 
 			rendererExtensionParallelShaderCompile: extensions.has( 'KHR_parallel_shader_compile' ),
 
@@ -510,6 +510,8 @@ function WebGLPrograms( renderer, cubemaps, cubeuvmaps, extensions, capabilities
 			_programLayers.enable( 19 );
 		if ( parameters.dispersion )
 			_programLayers.enable( 20 );
+		if ( parameters.batchingColor )
+			_programLayers.enable( 21 );
 
 		array.push( _programLayers.mask );
 		_programLayers.disableAll();
@@ -534,28 +536,26 @@ function WebGLPrograms( renderer, cubemaps, cubeuvmaps, extensions, capabilities
 			_programLayers.enable( 8 );
 		if ( parameters.shadowMapEnabled )
 			_programLayers.enable( 9 );
-		if ( parameters.useLegacyLights )
-			_programLayers.enable( 10 );
 		if ( parameters.doubleSided )
-			_programLayers.enable( 11 );
+			_programLayers.enable( 10 );
 		if ( parameters.flipSided )
-			_programLayers.enable( 12 );
+			_programLayers.enable( 11 );
 		if ( parameters.useDepthPacking )
-			_programLayers.enable( 13 );
+			_programLayers.enable( 12 );
 		if ( parameters.dithering )
-			_programLayers.enable( 14 );
+			_programLayers.enable( 13 );
 		if ( parameters.transmission )
-			_programLayers.enable( 15 );
+			_programLayers.enable( 14 );
 		if ( parameters.sheen )
-			_programLayers.enable( 16 );
+			_programLayers.enable( 15 );
 		if ( parameters.opaque )
-			_programLayers.enable( 17 );
+			_programLayers.enable( 16 );
 		if ( parameters.pointsUvs )
-			_programLayers.enable( 18 );
+			_programLayers.enable( 17 );
 		if ( parameters.decodeVideoTexture )
-			_programLayers.enable( 19 );
+			_programLayers.enable( 18 );
 		if ( parameters.alphaToCoverage )
-			_programLayers.enable( 20 );
+			_programLayers.enable( 19 );
 
 		array.push( _programLayers.mask );
 

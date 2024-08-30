@@ -1,5 +1,5 @@
 import {THREE} from '../three-defs.js';
-import {uniform} from "three/nodes";
+import {uniform} from "three/tsl";
 
 
 export const wave_constants = (() => {

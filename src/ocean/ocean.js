@@ -171,6 +171,8 @@ export const ocean = (() => {
 			
 			for (let k in this.chunks_) {
 				this.chunks_[k].chunk.Update(relativeCameraPosition);
+
+				this.chunks_[k].chunk.mesh_.material.wireframe = this.params_.guiParams.ocean.wireframe;
 			}
 			for (let c of this.builder_.old_) {
 				c.chunk.Update(relativeCameraPosition);

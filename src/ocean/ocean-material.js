@@ -1,6 +1,6 @@
 import {THREE} from '../three-defs.js';
 import {RGBMLoader} from '../three-defs.js';
-import {MeshBasicNodeMaterial, texture, cubeTexture, attribute, uniform, vec3, vec4, float, depth, depthTexture, sampler} from "three/nodes";
+import {MeshBasicNodeMaterial, texture, cubeTexture, attribute, uniform, vec3, vec4} from "three/tsl";
 import {entity} from '../entity.js';
 import {ocean_constants} from './ocean-constants.js';
 import {vertexStageWGSL} from  '../../resources/shader/ocean/vertexStageWGSL.js';
