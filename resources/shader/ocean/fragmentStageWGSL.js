@@ -30,9 +30,6 @@ export const fragmentStageWGSL = wgslFn(`
         jacobian1_sampler: sampler,
         jacobian2_sampler: sampler,
         jacobian3_sampler: sampler,
-        noise: texture_2d<f32>,
-        testTexture: texture_2d<f32>,
-        testTexture_sampler: sampler,
         waveLengths: vec4<f32>,
         ifftResolution: f32,
         foamStrength: f32,
@@ -293,32 +290,5 @@ export const fragmentStageWGSL = wgslFn(`
     fn random(par: vec2<f32>) -> f32 {
         return fract(sin(dot(par, vec2<f32>(12.9898, 78.233))) * 43758.5453);
     }
-
-
-    fn tileBreaker(noise: texture_2d<f32>, texture: texture_2d<f32>, position: vec2<f32>, size:f32, scale: f32, waveLength: f32) -> vec4<f32> {
- 
-        var k: f32 = findNearestTexelsAndInterpolate(noise, 0.005 * position, size).x;
-
-        var l: f32 = k * 8;
-        var f: f32 = fract(l);
-
-        var ia: f32 = floor(l + 0.5);
-        var ib: f32 = floor(l);
-        f = min(f, 1 - f) * 2;
-
-        var offa: vec2<f32> = sin(vec2<f32>(3, 7) * ia);
-        var offb: vec2<f32> = sin(vec2<f32>(3, 7) * ib);
-
-        var texCoordA = (position + offa * size);
-        var texCoordB = (position + offb * size);
-
-        var cola = findNearestTexelsAndInterpolate(texture, scale/waveLength*texCoordA, size);
-        var colb = findNearestTexelsAndInterpolate(texture, scale/waveLength*texCoordB, size);
-
-        return mix(cola, colb, smoothstep(0.2, 0.8, f - 0.1 * sumV(cola.xyz - colb.xyz)));
-
-        //return vec4<f32>(k, k, k, k);
-    }
-
 
 `);
