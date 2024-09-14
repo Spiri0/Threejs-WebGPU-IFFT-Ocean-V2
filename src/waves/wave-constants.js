@@ -58,13 +58,11 @@ export const wave_constants = (() => {
 		
 	return {
 		DEFAULT_WORKGROUP: [8, 8, 1],
-		TEXTURE_SIZE: 128,
-		LENGTH_SCALES: [813, 252, 27, 5],
-		//LENGTH_SCALES: [1209.017, 550, 125.7514, 84.984],
-		//LENGTH_SCALES: [2000, 1000, 500, 250],
-		LAMBDA: [0.8, 0.8, 0.8, 0.8],
+		TEXTURE_SIZE: 256,
+		LENGTH_SCALES: [252, 17, 5],
+		LAMBDA: [0.8, 0.8, 0.8],
 		FOAM_STRENGTH: uniform(0.8),
-		FOAM_THRESHOLD: uniform(2.7),
+		FOAM_THRESHOLD: uniform(2.5),
 		FIRST_WAVE_DATASET,
 		SECOND_WAVE_DATASET,
 		FIRST_WAVE_BORDERS,

@@ -110,7 +110,7 @@ class Main extends entity.Entity{
 
 	RAF() {
 
-		const dstFPS = 30;
+		const dstFPS = 40;
 		const fpsInterval = 1000 / dstFPS;
 		
 		requestAnimationFrame(() => {

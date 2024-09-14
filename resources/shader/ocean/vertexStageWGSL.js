@@ -6,11 +6,10 @@ export const vertexStageWGSL = (() => {
     //varyings
     const vDisplacedPosition = varyingProperty("vec3", "vDisplacedPosition");
     const vMorphedPosition = varyingProperty("vec3", "vMorphedPosition");
-    const vCascadeScales = varyingProperty("vec4", "vCascadeScales");
+    const vCascadeScales = varyingProperty("vec3", "vCascadeScales");
     const vTexelCoord0 = varyingProperty("vec2", "vTexelCoord0");
     const vTexelCoord1 = varyingProperty("vec2", "vTexelCoord1");
     const vTexelCoord2 = varyingProperty("vec2", "vTexelCoord2");
-    const vTexelCoord3 = varyingProperty("vec2", "vTexelCoord3");
 
 
     const vertexStageWGSL = wgslFn(`
@@ -19,7 +18,6 @@ export const vertexStageWGSL = (() => {
         displacement0: texture_2d<f32>,
         displacement1: texture_2d<f32>,
         displacement2: texture_2d<f32>,
-        displacement3: texture_2d<f32>,
         noise: texture_2d<f32>,
         cameraPosition: vec3<f32>,
         time: f32,
@@ -38,75 +36,63 @@ export const vertexStageWGSL = (() => {
         var morphedPosition: vec3<f32> = vec3<f32>(morphedVertex.x, 0, morphedVertex.y);
 
         
-        var lodHeightThreshold: f32 = 250;
-        var lod1DetailThreshold: f32 = 0.25;
-        var lod2DetailThreshold: f32 = 0.15;
-        var lod3DetailThreshold: f32 = 0.15;
+        var viewVector = cameraPosition - position;
+        var viewDist = length(viewVector);
+        
 
-        var lod0: f32 = select(1.0, cameraPosition.y/lodHeightThreshold, cameraPosition.y > lodHeightThreshold);
-        var lod1: f32 = select(lod2DetailThreshold, lod2DetailThreshold + (1 - lod1DetailThreshold) * (lodHeightThreshold - cameraPosition.y)/lodHeightThreshold, cameraPosition.y < lodHeightThreshold);
-        var lod2: f32 = select(lod2DetailThreshold, lod2DetailThreshold + (1 - lod2DetailThreshold) * (lodHeightThreshold - cameraPosition.y)/lodHeightThreshold, cameraPosition.y < lodHeightThreshold);
-        var lod3: f32 = select(lod3DetailThreshold, lod3DetailThreshold + (1 - lod3DetailThreshold) * (lodHeightThreshold - cameraPosition.y)/lodHeightThreshold, cameraPosition.y < lodHeightThreshold);
+        var lod0 = min(waveLengths.x / viewDist, 1.0);
+        var lod1 = min(waveLengths.y / viewDist, 1.0);
+        var lod2 = min(waveLengths.z / viewDist, 1.0);
 
         var vtexelCoord0: vec2<f32> = ifftResolution * morphedPosition.xz/waveLengths.x;
         var vtexelCoord1: vec2<f32> = ifftResolution * morphedPosition.xz/waveLengths.y;
         var vtexelCoord2: vec2<f32> = ifftResolution * morphedPosition.xz/waveLengths.z;
-        var vtexelCoord3: vec2<f32> = ifftResolution * morphedPosition.xz/waveLengths.w;
 
-        var displacement_0: vec4<f32> = findNearestTexelsAndInterpolate(displacement0, vtexelCoord0, ifftResolution) * lod0;
-        var displacement_1: vec4<f32> = findNearestTexelsAndInterpolate(displacement1, vtexelCoord1, ifftResolution) * lod1;
-        var displacement_2: vec4<f32> = findNearestTexelsAndInterpolate(displacement2, vtexelCoord2, ifftResolution) * lod2;
-        var displacement_3: vec4<f32> = findNearestTexelsAndInterpolate(displacement3, vtexelCoord3, ifftResolution) * lod3;
+        var displacement_0: vec4<f32> = InterpolateBilinear(displacement0, vtexelCoord0, ifftResolution) * lod0;
+        var displacement_1: vec4<f32> = InterpolateBilinear(displacement1, vtexelCoord1, ifftResolution) * lod1;
+        var displacement_2: vec4<f32> = InterpolateBilinear(displacement2, vtexelCoord2, ifftResolution) * lod2;
 
 
-        var displacedPosition: vec3<f32> = morphedPosition + (displacement_0.rgb + displacement_1.rgb + displacement_2.rgb + displacement_3.rgb);
+        var displacedPosition: vec3<f32> = morphedPosition + (displacement_0.rgb + displacement_1.rgb + displacement_2.rgb);
 
         
-        varyings.vCascadeScales = vec4<f32>(lod0, lod1, lod2, lod3);
+        varyings.vCascadeScales = vec3<f32>(lod0, lod1, lod2);
         varyings.vDisplacedPosition = displacedPosition;
         varyings.vMorphedPosition = morphedPosition;
         varyings.vTexelCoord0 = vtexelCoord0;
         varyings.vTexelCoord1 = vtexelCoord1;
         varyings.vTexelCoord2 = vtexelCoord2;
-        varyings.vTexelCoord3 = vtexelCoord3;
         
-        //return vec4<f32>(morphedPosition, 1.0);
         return vec4<f32>(displacedPosition, 1.0);
     }
 
 
-    fn findNearestTexelsAndInterpolate(texture: texture_2d<f32>, position: vec2<f32>, size: f32) -> vec4<f32> {
+    fn InterpolateBilinear(texture: texture_2d<f32>, position: vec2<f32>, size: f32) -> vec4<f32> {
 
-        var weights: vec2<f32> = abs(fract(position));
+        var texelSize = 1.0 / size;
+        var wrapCoords = fract(position / size) * size;
 
-        var texCoord0 = floor(position) % size;
-        var texCoord1 = vec2<f32>(ceil(position.x), floor(position.y)) % size;
-        var texCoord2 = vec2<f32>(floor(position.x), ceil(position.y)) % size;
-        var texCoord3 = ceil(position) % size;
+        var texel00 = vec2<u32>(floor(wrapCoords));
+        var texel11 = texel00 + vec2<u32>(1, 1);
+        var texel01 = vec2<u32>(texel11.x, texel00.y);
+        var texel10 = vec2<u32>(texel00.x, texel11.y);
 
-        var offset = size - 1;
+        texel00 = texel00 % u32(size);
+        texel01 = texel01 % u32(size);
+        texel10 = texel10 % u32(size);
+        texel11 = texel11 % u32(size);
 
-        if(texCoord0.x < 0){texCoord0.x = offset + texCoord0.x;}
-        if(texCoord0.y < 0){texCoord0.y = offset + texCoord0.y;}
-        if(texCoord1.x < 0){texCoord1.x = offset + texCoord1.x;}
-        if(texCoord1.y < 0){texCoord1.y = offset + texCoord1.y;}
-        if(texCoord2.x < 0){texCoord2.x = offset + texCoord2.x;}
-        if(texCoord2.y < 0){texCoord2.y = offset + texCoord2.y;}
-        if(texCoord3.x < 0){texCoord3.x = offset + texCoord3.x;}
-        if(texCoord3.y < 0){texCoord3.y = offset + texCoord3.y;}
+        var fractCoords = wrapCoords - vec2<f32>(texel00);
 
+        var value00 = textureLoad(texture, texel00, 0); // tl
+        var value10 = textureLoad(texture, texel01, 0); // tr
+        var value01 = textureLoad(texture, texel10, 0); // bl
+        var value11 = textureLoad(texture, texel11, 0); // br
 
-        var texel0 = textureLoad(texture, vec2<i32>(texCoord0), 0);
-        var texel1 = textureLoad(texture, vec2<i32>(texCoord1), 0);
-        var texel2 = textureLoad(texture, vec2<i32>(texCoord2), 0);
-        var texel3 = textureLoad(texture, vec2<i32>(texCoord3), 0);
+        var value0 = mix(value00, value10, fractCoords.x);
+        var value1 = mix(value01, value11, fractCoords.x);
 
-
-        var interp1 = mix(texel0, texel1, weights.x);
-        var interp2 = mix(texel2, texel3, weights.x);
-        var interpolatedValue = mix(interp1, interp2, weights.y);
-
-        return interpolatedValue;
+        return mix(value0, value1, fractCoords.y);
     }
 
 
@@ -177,33 +163,7 @@ export const vertexStageWGSL = (() => {
     }
 
 
-    fn tileBreaker(noise: texture_2d<f32>, texture: texture_2d<f32>, position: vec2<f32>, size:f32, scale: f32, waveLength: f32) -> vec4<f32> {
- 
-        var k: f32 = findNearestTexelsAndInterpolate(noise, 0.005 * position, size).x;
-
-        var l: f32 = k * 8;
-        var f: f32 = fract(l);
-
-        var ia: f32 = floor(l + 0.5);
-        var ib: f32 = floor(l);
-        f = min(f, 1 - f) * 2;
-
-        var offa: vec2<f32> = sin(vec2<f32>(3, 7) * ia);
-        var offb: vec2<f32> = sin(vec2<f32>(3, 7) * ib);
-
-        var texCoordA = (position + offa * size);
-        var texCoordB = (position + offb * size);
-
-        var cola = findNearestTexelsAndInterpolate(texture, scale/waveLength*texCoordA, size);
-        var colb = findNearestTexelsAndInterpolate(texture, scale/waveLength*texCoordB, size);
-
-        return mix(cola, colb, smoothstep(0.2, 0.8, f - 0.1 * sumV(cola.xyz - colb.xyz)));
-
-        //return vec4<f32>(k, k, k, k);
-    }
-
-
-`, [vDisplacedPosition, vMorphedPosition, vCascadeScales, vTexelCoord0, vTexelCoord1, vTexelCoord2, vTexelCoord3]);
+`, [vDisplacedPosition, vMorphedPosition, vCascadeScales, vTexelCoord0, vTexelCoord1, vTexelCoord2]);
 
 
 
@@ -215,8 +175,7 @@ export const vertexStageWGSL = (() => {
         vCascadeScales,
         vTexelCoord0,
         vTexelCoord1,
-        vTexelCoord2,
-        vTexelCoord3
+        vTexelCoord2
     }
 
 

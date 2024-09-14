@@ -17,18 +17,16 @@ export const fragmentStageWGSL = wgslFn(`
         derivatives0: texture_2d<f32>,
         derivatives1: texture_2d<f32>,
         derivatives2: texture_2d<f32>,
-        derivatives3: texture_2d<f32>,
         derivatives0_sampler: sampler,
         derivatives1_sampler: sampler,
         derivatives2_sampler: sampler,
-        derivatives3_sampler: sampler,
-        jacobian1: texture_2d<f32>, 
+        jacobian0: texture_2d<f32>, 
+        jacobian1: texture_2d<f32>,
         jacobian2: texture_2d<f32>,
-        jacobian3: texture_2d<f32>,
+        jacobian0_sampler: sampler,
         jacobian1_sampler: sampler,
         jacobian2_sampler: sampler,
-        jacobian3_sampler: sampler,
-        waveLengths: vec4<f32>,
+        waveLengths: vec3<f32>,
         ifftResolution: f32,
         foamStrength: f32,
         foamThreshold: f32,
@@ -38,7 +36,6 @@ export const fragmentStageWGSL = wgslFn(`
         vTexelCoord0: vec2<f32>,
         vTexelCoord1: vec2<f32>,
         vTexelCoord2: vec2<f32>,
-        vTexelCoord3: vec2<f32>,
         envTexture: texture_cube<f32>,
         envTexture_sampler: sampler,
         sunPosition: vec3<f32>,
@@ -48,28 +45,21 @@ export const fragmentStageWGSL = wgslFn(`
         var vViewDist = length(vViewVector);
         var viewDir = normalize(vViewVector);
 
-/*
-        var Normal_0: vec4<f32> = customTextureSample(derivatives0, derivatives0_sampler, (vMorphedPosition.xz/waveLengths.x)) * vCascadeScales.x;
-        var Normal_1: vec4<f32> = customTextureSample(derivatives1, derivatives1_sampler, (vMorphedPosition.xz/waveLengths.y)) * vCascadeScales.y;
-        var Normal_2: vec4<f32> = customTextureSample(derivatives2, derivatives2_sampler, (vMorphedPosition.xz/waveLengths.z)) * vCascadeScales.z;
-        var Normal_3: vec4<f32> = customTextureSample(derivatives3, derivatives3_sampler, (vMorphedPosition.xz/waveLengths.w)) * vCascadeScales.w;
-*/
         var Normal_0: vec4<f32> = textureSample(derivatives0, derivatives0_sampler, (vMorphedPosition.xz/waveLengths.x)) * vCascadeScales.x;
         var Normal_1: vec4<f32> = textureSample(derivatives1, derivatives1_sampler, (vMorphedPosition.xz/waveLengths.y)) * vCascadeScales.y;
         var Normal_2: vec4<f32> = textureSample(derivatives2, derivatives2_sampler, (vMorphedPosition.xz/waveLengths.z)) * vCascadeScales.z;
-        var Normal_3: vec4<f32> = textureSample(derivatives3, derivatives3_sampler, (vMorphedPosition.xz/waveLengths.w)) * vCascadeScales.w;
 
-
+        var jacobi0: f32 = textureSample(jacobian0, jacobian0_sampler, (vMorphedPosition.xz/waveLengths.x)).x;
         var jacobi1: f32 = textureSample(jacobian1, jacobian1_sampler, (vMorphedPosition.xz/waveLengths.y)).x;
         var jacobi2: f32 = textureSample(jacobian2, jacobian2_sampler, (vMorphedPosition.xz/waveLengths.z)).x;
-        var jacobi3: f32 = textureSample(jacobian3, jacobian3_sampler, (vMorphedPosition.xz/waveLengths.w)).x;
 
 
-        var derivatives: vec4<f32> = normalize(Normal_0 + Normal_1 + Normal_2 + Normal_3);
+        
+        var derivatives: vec4<f32> = normalize(Normal_0 + Normal_1 + Normal_2);
         var slope: vec2<f32> = vec2<f32>(derivatives.x / (1.0 + derivatives.z), derivatives.y / (1.0 + derivatives.w));
         var normalOcean: vec3<f32> = normalize(vec3(-slope.x, 1.0, -slope.y));
 
-        var jakobian: f32 = jacobi1 + jacobi2 + jacobi3;
+        var jakobian: f32 = jacobi0 + jacobi1 + jacobi2;
         var foam_mix_factor: f32 = min(1, max(0, (-jakobian + foamThreshold) * foamStrength));
 
         if(dot(normalOcean, -viewDir) < 0.0){

@@ -127,15 +127,12 @@ export const wave_generator = (() => {
 			ocean.material_.positionNode.parameters.displacement0.value = this.cascades[0].displacement;
 			ocean.material_.positionNode.parameters.displacement1.value = this.cascades[1].displacement;
 			ocean.material_.positionNode.parameters.displacement2.value = this.cascades[2].displacement;
-			ocean.material_.positionNode.parameters.displacement3.value = this.cascades[3].displacement;
 			ocean.material_.colorNode.parameters.derivatives0.value = this.cascades[0].derivative;
 			ocean.material_.colorNode.parameters.derivatives1.value = this.cascades[1].derivative;
 			ocean.material_.colorNode.parameters.derivatives2.value = this.cascades[2].derivative;
-			ocean.material_.colorNode.parameters.derivatives3.value = this.cascades[3].derivative;
 			ocean.material_.colorNode.parameters.jacobian0.value = this.cascades[0].jacobian;
 			ocean.material_.colorNode.parameters.jacobian1.value = this.cascades[1].jacobian;
 			ocean.material_.colorNode.parameters.jacobian2.value = this.cascades[2].jacobian;
-			ocean.material_.colorNode.parameters.jacobian3.value = this.cascades[3].jacobian;
 		}
 
 	}
