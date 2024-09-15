@@ -40,6 +40,7 @@ export { DepthTexture } from './textures/DepthTexture.js';
 export { Texture } from './textures/Texture.js';
 export * from './geometries/Geometries.js';
 export * from './materials/Materials.js';
+export * from './materials/nodes/NodeMaterials.js';
 export { Material } from './materials/Material.js';
 export { AnimationLoader } from './loaders/AnimationLoader.js';
 export { CompressedTextureLoader } from './loaders/CompressedTextureLoader.js';
@@ -152,6 +153,7 @@ export { Path } from './extras/core/Path.js';
 export { ShapePath } from './extras/core/ShapePath.js';
 export { CurvePath } from './extras/core/CurvePath.js';
 export { Curve } from './extras/core/Curve.js';
+export { Controls } from './extras/Controls.js';
 export { DataUtils } from './extras/DataUtils.js';
 export { ImageUtils } from './extras/ImageUtils.js';
 export { ShapeUtils } from './extras/ShapeUtils.js';
@@ -169,7 +171,11 @@ export { default as StorageTexture } from './renderers/common/StorageTexture.js'
 export { default as StorageBufferAttribute } from './renderers/common/StorageBufferAttribute.js';
 export { default as StorageInstancedBufferAttribute } from './renderers/common/StorageInstancedBufferAttribute.js';
 export { default as IESSpotLight } from './lights/webgpu/IESSpotLight.js';
+export { default as NodeLoader } from './loaders/nodes/NodeLoader.js';
+export { default as NodeObjectLoader } from './loaders/nodes/NodeObjectLoader.js';
+export { default as NodeMaterialLoader } from './loaders/nodes/NodeMaterialLoader.js';
 export * from './nodes/Nodes.js';
+export * from './nodes/TSL.js';
 
 if ( typeof __THREE_DEVTOOLS__ !== 'undefined' ) {
 

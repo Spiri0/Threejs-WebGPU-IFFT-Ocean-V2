@@ -1,6 +1,5 @@
-import Node, { addNodeClass } from './Node.js';
-import { varying } from './VaryingNode.js';
-import { nodeImmutable } from '../shadernode/ShaderNode.js';
+import Node, { registerNode } from './Node.js';
+import { nodeImmutable, varying } from '../tsl/TSLBase.js';
 
 class IndexNode extends Node {
 
@@ -33,6 +32,10 @@ class IndexNode extends Node {
 
 			propertyName = builder.getDrawIndex();
 
+		} else if ( scope === IndexNode.INVOCATION_LOCAL ) {
+
+			propertyName = builder.getInvocationLocalIndex();
+
 		} else {
 
 			throw new Error( 'THREE.IndexNode: Unknown scope: ' + scope );
@@ -61,12 +64,14 @@ class IndexNode extends Node {
 
 IndexNode.VERTEX = 'vertex';
 IndexNode.INSTANCE = 'instance';
+IndexNode.INVOCATION_LOCAL = 'invocationLocal';
 IndexNode.DRAW = 'draw';
 
 export default IndexNode;
 
-export const vertexIndex = nodeImmutable( IndexNode, IndexNode.VERTEX );
-export const instanceIndex = nodeImmutable( IndexNode, IndexNode.INSTANCE );
-export const drawIndex = nodeImmutable( IndexNode, IndexNode.DRAW );
+IndexNode.type = /*@__PURE__*/ registerNode( 'Index', IndexNode );
 
-addNodeClass( 'IndexNode', IndexNode );
+export const vertexIndex = /*@__PURE__*/ nodeImmutable( IndexNode, IndexNode.VERTEX );
+export const instanceIndex = /*@__PURE__*/ nodeImmutable( IndexNode, IndexNode.INSTANCE );
+export const invocationLocalIndex = /*@__PURE__*/ nodeImmutable( IndexNode, IndexNode.INVOCATION_LOCAL );
+export const drawIndex = /*@__PURE__*/ nodeImmutable( IndexNode, IndexNode.DRAW );

@@ -24,7 +24,6 @@ export const ocean_material = (() => {
 
 
 
-
 			const cubeTextureLoader = new THREE.CubeTextureLoader();
 			cubeTextureLoader.setPath('./resources/textures/cube/sky/');
 			const environmentTexture = cubeTextureLoader.load(['px.jpg', 'nx.jpg', 'py.jpg', 'ny.jpg', 'pz.jpg', 'nz.jpg']);
@@ -32,11 +31,7 @@ export const ocean_material = (() => {
 			environmentTexture.minFilter = THREE.LinearFilter;
 			environmentTexture.magFilter = THREE.LinearFilter;
     
-
-
-
-			const depthTex = new THREE.DepthTexture();
-			depthTex.type = THREE.FloatType;
+			console.log(params.threejs.sceneDepthPassTexture);
 
             
 			const wgslShaderParams = {
@@ -68,11 +63,12 @@ export const ocean_material = (() => {
 				derivatives0: texture(params.cascades[0].derivative),
 				derivatives1: texture(params.cascades[1].derivative),
 				derivatives2: texture(params.cascades[2].derivative),
-				derivative_sampler: texture(params.cascades[0].derivative),
 				jacobian0: texture(params.cascades[0].jacobian),
 				jacobian1: texture(params.cascades[1].jacobian),
 				jacobian2: texture(params.cascades[2].jacobian),
+				derivative_sampler: texture(params.cascades[0].derivative),
 				jacobian_sampler: texture(params.cascades[0].jacobian),
+				//depthTexture: params.threejs.sceneDepthPassTexture,
 				foamStrength: params.foamStrength,
 				foamThreshold: params.foamThreshold,
 				waveLengths: vec3(
@@ -84,16 +80,14 @@ export const ocean_material = (() => {
 				//envTexture_sampler: cubeTexture(environmentTexture),
 				envTexture: cubeTexture(params.environment),
 				envTexture_sampler: cubeTexture(params.environment),
-				sunPosition: uniform(params.sunPosition)
-				//depthT: depthTexture(depthTex),
-                
+				sunPosition: uniform(params.sunPosition)    
 			}
         
 			this.oceanMaterial = new MeshBasicNodeMaterial();
 			this.oceanMaterial.positionNode = vertexStageWGSL.vertexStageWGSL(wgslShaderParams);
 			this.oceanMaterial.colorNode = fragmentStageWGSL(wgslShaderParams);
 			this.oceanMaterial.side = THREE.DoubleSide;
-			//this.oceanMaterial.transparent = true;
+			this.oceanMaterial.transparent = true;
 
 		}
 

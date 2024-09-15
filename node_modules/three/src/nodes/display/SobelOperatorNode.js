@@ -1,10 +1,12 @@
+import { registerNode } from '../core/Node.js';
 import TempNode from '../core/TempNode.js';
-import { uv } from '../accessors/UVNode.js';
-import { luminance } from './ColorAdjustmentNode.js';
-import { addNodeElement, tslFn, nodeObject, vec2, vec3, vec4, mat3 } from '../shadernode/ShaderNode.js';
+import { uv } from '../accessors/UV.js';
+import { luminance } from './ColorAdjustment.js';
+import { Fn, nodeObject, vec2, vec3, vec4, mat3 } from '../tsl/TSLBase.js';
 import { NodeUpdateType } from '../core/constants.js';
 import { uniform } from '../core/UniformNode.js';
 import { add } from '../math/OperatorNode.js';
+import { convertToTexture } from '../utils/RTTNode.js';
 
 import { Vector2 } from '../../math/Vector2.js';
 
@@ -38,7 +40,7 @@ class SobelOperatorNode extends TempNode {
 
 		const sampleTexture = ( uv ) => textureNode.uv( uv );
 
-		const sobel = tslFn( () => {
+		const sobel = Fn( () => {
 
 			// Sobel Edge Detection (see https://youtu.be/uihBwtPIBxM)
 
@@ -114,8 +116,8 @@ class SobelOperatorNode extends TempNode {
 
 }
 
-export const sobel = ( node ) => nodeObject( new SobelOperatorNode( nodeObject( node ).toTexture() ) );
-
-addNodeElement( 'sobel', sobel );
-
 export default SobelOperatorNode;
+
+SobelOperatorNode.type = /*@__PURE__*/ registerNode( 'SobelOperator', SobelOperatorNode );
+
+export const sobel = ( node ) => nodeObject( new SobelOperatorNode( convertToTexture( node ) ) );

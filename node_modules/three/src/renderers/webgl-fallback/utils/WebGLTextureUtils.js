@@ -79,11 +79,11 @@ class WebGLTextureUtils {
 
 			glTextureType = gl.TEXTURE_CUBE_MAP;
 
-		} else if ( texture.isDataArrayTexture === true ) {
+		} else if ( texture.isDataArrayTexture === true || texture.isCompressedArrayTexture === true ) {
 
 			glTextureType = gl.TEXTURE_2D_ARRAY;
 
-		} else if ( texture.isData3DTexture === true ) {
+		} else if ( texture.isData3DTexture === true ) { // TODO: isCompressed3DTexture, wait for #26642
 
 			glTextureType = gl.TEXTURE_3D;
 
@@ -245,7 +245,11 @@ class WebGLTextureUtils {
 
 		const { gl, extensions, backend } = this;
 
-		const { currentAnisotropy } = backend.get( texture );
+
+		gl.pixelStorei( gl.UNPACK_FLIP_Y_WEBGL, texture.flipY );
+		gl.pixelStorei( gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, texture.premultiplyAlpha );
+		gl.pixelStorei( gl.UNPACK_ALIGNMENT, texture.unpackAlignment );
+		gl.pixelStorei( gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE );
 
 		gl.texParameteri( textureType, gl.TEXTURE_WRAP_S, wrappingToGL[ texture.wrapS ] );
 		gl.texParameteri( textureType, gl.TEXTURE_WRAP_T, wrappingToGL[ texture.wrapT ] );
@@ -259,8 +263,10 @@ class WebGLTextureUtils {
 		gl.texParameteri( textureType, gl.TEXTURE_MAG_FILTER, filterToGL[ texture.magFilter ] );
 
 
+		const hasMipmaps = texture.mipmaps !== undefined && texture.mipmaps.length > 0;
+
 		// follow WebGPU backend mapping for texture filtering
-		const minFilter = ! texture.isVideoTexture && texture.minFilter === LinearFilter ? LinearMipmapLinearFilter : texture.minFilter;
+		const minFilter = texture.minFilter === LinearFilter && hasMipmaps ? LinearMipmapLinearFilter : texture.minFilter;
 
 		gl.texParameteri( textureType, gl.TEXTURE_MIN_FILTER, filterToGL[ minFilter ] );
 
@@ -277,11 +283,10 @@ class WebGLTextureUtils {
 			if ( texture.minFilter !== NearestMipmapLinearFilter && texture.minFilter !== LinearMipmapLinearFilter ) return;
 			if ( texture.type === FloatType && extensions.has( 'OES_texture_float_linear' ) === false ) return; // verify extension for WebGL 1 and WebGL 2
 
-			if ( texture.anisotropy > 1 || currentAnisotropy !== texture.anisotropy ) {
+			if ( texture.anisotropy > 1 ) {
 
 				const extension = extensions.get( 'EXT_texture_filter_anisotropic' );
 				gl.texParameterf( textureType, extension.TEXTURE_MAX_ANISOTROPY_EXT, Math.min( texture.anisotropy, backend.getMaxAnisotropy() ) );
-				backend.get( texture ).currentAnisotropy = texture.anisotropy;
 
 			}
 
@@ -334,14 +339,9 @@ class WebGLTextureUtils {
 
 		backend.state.bindTexture( glTextureType, textureGPU );
 
-		gl.pixelStorei( gl.UNPACK_FLIP_Y_WEBGL, texture.flipY );
-		gl.pixelStorei( gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, texture.premultiplyAlpha );
-		gl.pixelStorei( gl.UNPACK_ALIGNMENT, texture.unpackAlignment );
-		gl.pixelStorei( gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE );
-
 		this.setTextureParameters( glTextureType, texture );
 
-		if ( texture.isDataArrayTexture ) {
+		if ( texture.isDataArrayTexture || texture.isCompressedArrayTexture ) {
 
 			gl.texStorage3D( gl.TEXTURE_2D_ARRAY, levels, glInternalFormat, width, height, depth );
 
@@ -427,9 +427,12 @@ class WebGLTextureUtils {
 
 		this.backend.state.bindTexture( glTextureType, textureGPU );
 
+		this.setTextureParameters( glTextureType, texture );
+
 		if ( texture.isCompressedTexture ) {
 
 			const mipmaps = texture.mipmaps;
+			const image = options.image;
 
 			for ( let i = 0; i < mipmaps.length; i ++ ) {
 
@@ -437,7 +440,6 @@ class WebGLTextureUtils {
 
 				if ( texture.isCompressedArrayTexture ) {
 
-					const image = options.image;
 
 					if ( texture.format !== gl.RGBA ) {
 
@@ -473,6 +475,7 @@ class WebGLTextureUtils {
 				}
 
 			}
+
 
 		} else if ( texture.isCubeTexture ) {
 
@@ -527,7 +530,6 @@ class WebGLTextureUtils {
 
 	deallocateRenderBuffers( renderTarget ) {
 
-
 		const { gl, backend } = this;
 
 		// remove framebuffer reference
@@ -537,31 +539,36 @@ class WebGLTextureUtils {
 
 			renderContextData.renderBufferStorageSetup = undefined;
 
-			if ( renderContextData.framebuffer ) {
+			if ( renderContextData.framebuffers ) {
 
-				gl.deleteFramebuffer( renderContextData.framebuffer );
-				renderContextData.framebuffer = undefined;
+				for ( const cacheKey in renderContextData.framebuffers ) {
+
+					gl.deleteFramebuffer( renderContextData.framebuffers[ cacheKey ] );
+
+				}
+
+				delete renderContextData.framebuffers;
 
 			}
 
 			if ( renderContextData.depthRenderbuffer ) {
 
 				gl.deleteRenderbuffer( renderContextData.depthRenderbuffer );
-				renderContextData.depthRenderbuffer = undefined;
+				delete renderContextData.depthRenderbuffer;
 
 			}
 
 			if ( renderContextData.stencilRenderbuffer ) {
 
 				gl.deleteRenderbuffer( renderContextData.stencilRenderbuffer );
-				renderContextData.stencilRenderbuffer = undefined;
+				delete renderContextData.stencilRenderbuffer;
 
 			}
 
 			if ( renderContextData.msaaFrameBuffer ) {
 
 				gl.deleteFramebuffer( renderContextData.msaaFrameBuffer );
-				renderContextData.msaaFrameBuffer = undefined;
+				delete renderContextData.msaaFrameBuffer;
 
 			}
 
@@ -573,7 +580,7 @@ class WebGLTextureUtils {
 
 				}
 
-				renderContextData.msaaRenderbuffers = undefined;
+				delete renderContextData.msaaRenderbuffers;
 
 			}
 

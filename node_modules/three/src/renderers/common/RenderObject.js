@@ -235,7 +235,7 @@ export default class RenderObject {
 
 		}
 
-		cacheKey += this.clippingContextVersion + ',';
+		cacheKey += this.clippingContext.cacheKey + ',';
 
 		if ( object.skeleton ) {
 
@@ -263,7 +263,7 @@ export default class RenderObject {
 
 		if ( object.count > 1 ) {
 
-			cacheKey += object.count + ',';
+			cacheKey += object.count + ',' + object.uuid + ',';
 
 		}
 

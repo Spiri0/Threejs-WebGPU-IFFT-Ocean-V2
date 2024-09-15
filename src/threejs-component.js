@@ -1,5 +1,7 @@
 import {THREE, WebGPU} from './three-defs.js';
 import {entity} from "./entity.js";
+import {pass, depthPass} from "three/tsl";
+
 
 
 export const threejs_component = (() => {
@@ -16,32 +18,41 @@ export const threejs_component = (() => {
 				throw new Error('Your Browser does not support WebGPU yet');
 			}
 
-			this.renderer_ = new THREE.WebGPURenderer({ 
+			this.renderer = new THREE.WebGPURenderer({ 
 				canvas: document.createElement('canvas'),
 				antialias: true,
 				forceWebGL: false
 			});
     	
-			this.renderer_.outputColorSpace = THREE.SRGBColorSpace;
-			this.renderer_.setPixelRatio(window.devicePixelRatio);
-			this.renderer_.shadowMap.enabled = true;
-			this.renderer_.shadowMap.type = THREE.PCFSoftShadowMap;
-			this.renderer_.physicallyCorrectLights = true;
-			this.renderer_.domElement.id = 'threejs';
+			this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+			this.renderer.setPixelRatio(window.devicePixelRatio);
+			this.renderer.shadowMap.enabled = true;
+			this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+			this.renderer.physicallyCorrectLights = true;
+			this.renderer.domElement.id = 'threejs';
 
 
 			this.container = document.getElementById('container');
-			this.renderer_.setSize(this.container.clientWidth, this.container.clientHeight);
-			this.container.appendChild( this.renderer_.domElement );
+			this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
+			this.container.appendChild( this.renderer.domElement );
 		
 
 			const aspect = this.container.clientWidth / this.container.clientHeight; 
 			const fov = 50;
 			const near = 0.1;
 			const far = 1E6;
-			this.camera_ = new THREE.PerspectiveCamera(fov, aspect, near, far);
-			this.scene_ = new THREE.Scene();
-			this.renderer_.setClearColor( 0x87CEEB );
+			this.camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+			this.scene = new THREE.Scene();
+			this.renderer.setClearColor( 0x87CEEB );
+
+
+			this.postProcessing = new THREE.PostProcessing( this.renderer );
+
+			this.scenePass = pass( this.scene, this.camera );
+			this.sceneDepthPass = depthPass( this.scene, this.camera );
+
+			this.scenePassTexture = this.scenePass.getTextureNode();
+            this.sceneDepthPassTexture = this.sceneDepthPass.getTextureNode( 'depth' );
 
 
 			window.addEventListener('resize', () => {
@@ -52,8 +63,8 @@ export const threejs_component = (() => {
 
 		Render() {
 
-			this.camera_.layers.enableAll();
-			this.renderer_.render(this.scene_, this.camera_);
+			this.camera.layers.enableAll();
+			this.renderer.render(this.scene, this.camera);
 		}
 
 
@@ -67,9 +78,9 @@ export const threejs_component = (() => {
 			const width = this.container.clientWidth;
 			const height = this.container.clientHeight;
 		
-			this.camera_.aspect = width / height;
-			this.camera_.updateProjectionMatrix();
-			this.renderer_.setSize(width, height);	
+			this.camera.aspect = width / height;
+			this.camera.updateProjectionMatrix();
+			this.renderer.setSize(width, height);	
 		}
   
   	}//end class

@@ -1,9 +1,9 @@
-import Node, { addNodeClass } from '../core/Node.js';
+import Node, { registerNode } from '../core/Node.js';
 import { varyingProperty } from '../core/PropertyNode.js';
 import { instancedBufferAttribute, instancedDynamicBufferAttribute } from './BufferAttributeNode.js';
-import { normalLocal } from './NormalNode.js';
-import { positionLocal } from './PositionNode.js';
-import { nodeProxy, vec3, mat3, mat4 } from '../shadernode/ShaderNode.js';
+import { normalLocal } from './Normal.js';
+import { positionLocal } from './Position.js';
+import { nodeProxy, vec3, mat3, mat4 } from '../tsl/TSLBase.js';
 import { NodeUpdateType } from '../core/constants.js';
 import { buffer } from '../accessors/BufferNode.js';
 import { instanceIndex } from '../core/IndexNode.js';
@@ -31,7 +31,7 @@ class InstanceNode extends Node {
 
 	}
 
-	setup( /*builder*/ ) {
+	setup( builder ) {
 
 		let instanceMatrixNode = this.instanceMatrixNode;
 		let instanceColorNode = this.instanceColorNode;
@@ -91,19 +91,23 @@ class InstanceNode extends Node {
 		// POSITION
 
 		const instancePosition = instanceMatrixNode.mul( positionLocal ).xyz;
+		positionLocal.assign( instancePosition );
 
 		// NORMAL
 
-		const m = mat3( instanceMatrixNode );
+		if ( builder.hasGeometryAttribute( 'normal' ) ) {
 
-		const transformedNormal = normalLocal.div( vec3( m[ 0 ].dot( m[ 0 ] ), m[ 1 ].dot( m[ 1 ] ), m[ 2 ].dot( m[ 2 ] ) ) );
+			const m = mat3( instanceMatrixNode );
 
-		const instanceNormal = m.mul( transformedNormal ).xyz;
+			const transformedNormal = normalLocal.div( vec3( m[ 0 ].dot( m[ 0 ] ), m[ 1 ].dot( m[ 1 ] ), m[ 2 ].dot( m[ 2 ] ) ) );
 
-		// ASSIGNS
+			const instanceNormal = m.mul( transformedNormal ).xyz;
 
-		positionLocal.assign( instancePosition );
-		normalLocal.assign( instanceNormal );
+			// ASSIGNS
+
+			normalLocal.assign( instanceNormal );
+
+		}
 
 		// COLOR
 
@@ -135,6 +139,6 @@ class InstanceNode extends Node {
 
 export default InstanceNode;
 
-export const instance = nodeProxy( InstanceNode );
+InstanceNode.type = /*@__PURE__*/ registerNode( 'Instance', InstanceNode );
 
-addNodeClass( 'InstanceNode', InstanceNode );
+export const instance = /*@__PURE__*/ nodeProxy( InstanceNode );

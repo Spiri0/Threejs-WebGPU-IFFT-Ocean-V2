@@ -1,13 +1,16 @@
+import { registerNode } from '../core/Node.js';
 import TempNode from '../core/TempNode.js';
-import { uv } from '../accessors/UVNode.js';
-import { addNodeElement, tslFn, nodeObject, float, int, vec2, vec3, vec4, mat2, If } from '../shadernode/ShaderNode.js';
+import { uv } from '../accessors/UV.js';
+import { Fn, nodeObject, float, int, vec2, vec3, vec4, mat2, If } from '../tsl/TSLBase.js';
 import { NodeUpdateType } from '../core/constants.js';
 import { uniform } from '../core/UniformNode.js';
-import { uniforms } from '../accessors/UniformsNode.js';
+import { uniformArray } from '../accessors/UniformArrayNode.js';
 import { abs, dot, sin, cos, PI, pow, max } from '../math/MathNode.js';
-import { loop } from '../utils/LoopNode.js';
-import { luminance } from './ColorAdjustmentNode.js';
+import { Loop } from '../utils/LoopNode.js';
+import { luminance } from './ColorAdjustment.js';
 import { textureSize } from '../accessors/TextureSizeNode.js';
+import { convertToTexture } from '../utils/RTTNode.js';
+
 import { Vector2 } from '../../math/Vector2.js';
 import { Vector3 } from '../../math/Vector3.js';
 
@@ -30,7 +33,7 @@ class DenoiseNode extends TempNode {
 		this.index = uniform( 0 );
 
 		this._resolution = uniform( new Vector2() );
-		this._sampleVectors = uniforms( generatePdSamplePointInitializer( 16, 2, 1 ) );
+		this._sampleVectors = uniformArray( generatePdSamplePointInitializer( 16, 2, 1 ) );
 
 		this.updateBeforeType = NodeUpdateType.RENDER;
 
@@ -53,7 +56,7 @@ class DenoiseNode extends TempNode {
 		const sampleNormal = ( uv ) => this.normalNode.uv( uv );
 		const sampleNoise = ( uv ) => this.noiseNode.uv( uv );
 
-		const getViewPosition = tslFn( ( [ screenPosition, depth ] ) => {
+		const getViewPosition = Fn( ( [ screenPosition, depth ] ) => {
 
 			screenPosition = vec2( screenPosition.x, screenPosition.y.oneMinus() ).mul( 2.0 ).sub( 1.0 );
 
@@ -64,7 +67,7 @@ class DenoiseNode extends TempNode {
 
 		} );
 
-		const denoiseSample = tslFn( ( [ center, viewNormal, viewPosition, sampleUv ] ) => {
+		const denoiseSample = Fn( ( [ center, viewNormal, viewPosition, sampleUv ] ) => {
 
 			const texel = sampleTexture( sampleUv );
 			const depth = sampleDepth( sampleUv );
@@ -84,7 +87,7 @@ class DenoiseNode extends TempNode {
 
 		} );
 
-		const denoise = tslFn( ( [ uvNode ] ) => {
+		const denoise = Fn( ( [ uvNode ] ) => {
 
 			const depth = sampleDepth( uvNode );
 			const viewNormal = sampleNormal( uvNode ).rgb.normalize();
@@ -115,7 +118,7 @@ class DenoiseNode extends TempNode {
 			const totalWeight = float( 1.0 ).toVar();
 			const denoised = vec3( texel.rgb ).toVar();
 
-			loop( { start: int( 0 ), end: int( 16 ), type: 'int', condition: '<' }, ( { i } ) => {
+			Loop( { start: int( 0 ), end: int( 16 ), type: 'int', condition: '<' }, ( { i } ) => {
 
 				const sampleDir = this._sampleVectors.element( i ).toVar();
 				const offset = rotationMatrix.mul( sampleDir.xy.mul( float( 1.0 ).add( sampleDir.z.mul( this.radius.sub( 1 ) ) ) ) ).div( this._resolution ).toVar();
@@ -126,7 +129,7 @@ class DenoiseNode extends TempNode {
 				denoised.addAssign( result.xyz );
 				totalWeight.addAssign( result.w );
 
-			} );
+			} );
 
 			If( totalWeight.greaterThan( float( 0 ) ), () => {
 
@@ -144,7 +147,7 @@ class DenoiseNode extends TempNode {
 			]
 		} );
 
-		const output = tslFn( () => {
+		const output = Fn( () => {
 
 			return denoise( uvNode );
 
@@ -157,6 +160,10 @@ class DenoiseNode extends TempNode {
 	}
 
 }
+
+export default DenoiseNode;
+
+DenoiseNode.type = /*@__PURE__*/ registerNode( 'Denoise', DenoiseNode );
 
 function generatePdSamplePointInitializer( samples, rings, radiusExponent ) {
 
@@ -191,8 +198,4 @@ function generateDenoiseSamples( numSamples, numRings, radiusExponent ) {
 
 }
 
-export const denoise = ( node, depthNode, normalNode, noiseNode, camera ) => nodeObject( new DenoiseNode( nodeObject( node ).toTexture(), nodeObject( depthNode ), nodeObject( normalNode ), nodeObject( noiseNode ), camera ) );
-
-addNodeElement( 'denoise', denoise );
-
-export default DenoiseNode;
+export const denoise = ( node, depthNode, normalNode, noiseNode, camera ) => nodeObject( new DenoiseNode( convertToTexture( node ), nodeObject( depthNode ), nodeObject( normalNode ), nodeObject( noiseNode ), camera ) );

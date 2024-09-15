@@ -1,10 +1,11 @@
+import { registerNode } from '../core/Node.js';
 import TempNode from '../core/TempNode.js';
-import { nodeObject, addNodeElement, tslFn, vec2, vec3, vec4 } from '../shadernode/ShaderNode.js';
+import { nodeObject, Fn, vec2, vec3, vec4 } from '../tsl/TSLBase.js';
 import { uniform } from '../core/UniformNode.js';
-import { NodeUpdateType } from '../core/constants.js';
-import { uv } from '../accessors/UVNode.js';
+import { uv } from '../accessors/UV.js';
 import { sin, cos } from '../math/MathNode.js';
 import { add } from '../math/OperatorNode.js';
+import { viewportResolution } from '../display/ViewportNode.js';
 
 import { Vector2 } from '../../math/Vector2.js';
 
@@ -19,37 +20,25 @@ class DotScreenNode extends TempNode {
 		this.angle = uniform( angle );
 		this.scale = uniform( scale );
 
-		this._size = uniform( new Vector2() );
-
-		this.updateBeforeType = NodeUpdateType.RENDER;
-
-	}
-
-	updateBefore( frame ) {
-
-		const { renderer } = frame;
-
-		renderer.getDrawingBufferSize( this._size.value );
-
 	}
 
 	setup() {
 
 		const inputNode = this.inputNode;
 
-		const pattern = tslFn( () => {
+		const pattern = Fn( () => {
 
 			const s = sin( this.angle );
 			const c = cos( this.angle );
 
-			const tex = uv().mul( this._size ).sub( this.center );
+			const tex = uv().mul( viewportResolution ).sub( this.center );
 			const point = vec2( c.mul( tex.x ).sub( s.mul( tex.y ) ), s.mul( tex.x ).add( c.mul( tex.y ) ) ).mul( this.scale );
 
 			return sin( point.x ).mul( sin( point.y ) ).mul( 4 );
 
 		} );
 
-		const dotScreen = tslFn( () => {
+		const dotScreen = Fn( () => {
 
 			const color = inputNode;
 
@@ -67,9 +56,8 @@ class DotScreenNode extends TempNode {
 
 }
 
-export const dotScreen = ( node, center, angle, scale ) => nodeObject( new DotScreenNode( nodeObject( node ), center, angle, scale ) );
-
-addNodeElement( 'dotScreen', dotScreen );
-
 export default DotScreenNode;
 
+DotScreenNode.type = /*@__PURE__*/ registerNode( 'DotScreen', DotScreenNode );
+
+export const dotScreen = ( node, center, angle, scale ) => nodeObject( new DotScreenNode( nodeObject( node ), center, angle, scale ) );

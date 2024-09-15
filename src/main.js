@@ -42,9 +42,9 @@ class Main extends entity.Entity{
 		this.entityManager_.Add(threejs, 'threejs');
 		
 		
-		this.scene_ = threejs.GetComponent('ThreeJSController').scene_;
-		this.camera_ = threejs.GetComponent('ThreeJSController').camera_;
-		this.renderer_ = threejs.GetComponent('ThreeJSController').renderer_;
+		this.scene_ = threejs.GetComponent('ThreeJSController').scene;
+		this.camera_ = threejs.GetComponent('ThreeJSController').camera;
+		this.renderer_ = threejs.GetComponent('ThreeJSController').renderer;
 		this.threejs_ = threejs.GetComponent('ThreeJSController');
 		
 

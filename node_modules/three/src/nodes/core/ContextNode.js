@@ -1,16 +1,22 @@
-import Node, { addNodeClass } from './Node.js';
-import { addNodeElement, nodeProxy } from '../shadernode/ShaderNode.js';
+import Node, { registerNode } from './Node.js';
+import { addMethodChaining, nodeProxy } from '../tsl/TSLCore.js';
 
 class ContextNode extends Node {
 
-	constructor( node, context = {} ) {
+	constructor( node, value = {} ) {
 
 		super();
 
 		this.isContextNode = true;
 
 		this.node = node;
-		this.context = context;
+		this.value = value;
+
+	}
+
+	getScope() {
+
+		return this.node.getScope();
 
 	}
 
@@ -30,7 +36,7 @@ class ContextNode extends Node {
 
 		const previousContext = builder.getContext();
 
-		builder.setContext( { ...builder.context, ...this.context } );
+		builder.setContext( { ...builder.context, ...this.value } );
 
 		const node = this.node.build( builder );
 
@@ -44,7 +50,7 @@ class ContextNode extends Node {
 
 		const previousContext = builder.getContext();
 
-		builder.setContext( { ...builder.context, ...this.context } );
+		builder.setContext( { ...builder.context, ...this.value } );
 
 		const snippet = this.node.build( builder, output );
 
@@ -58,10 +64,10 @@ class ContextNode extends Node {
 
 export default ContextNode;
 
-export const context = nodeProxy( ContextNode );
+ContextNode.type = /*@__PURE__*/ registerNode( 'Context', ContextNode );
+
+export const context = /*@__PURE__*/ nodeProxy( ContextNode );
 export const label = ( node, name ) => context( node, { label: name } );
 
-addNodeElement( 'context', context );
-addNodeElement( 'label', label );
-
-addNodeClass( 'ContextNode', ContextNode );
+addMethodChaining( 'context', context );
+addMethodChaining( 'label', label );

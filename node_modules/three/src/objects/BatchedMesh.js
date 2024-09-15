@@ -206,7 +206,7 @@ class BatchedMesh extends Mesh {
 
 	_initColorsTexture() {
 
-		let size = Math.sqrt( this._maxIndexCount );
+		let size = Math.sqrt( this._maxInstanceCount );
 		size = Math.ceil( size );
 
 		// 4 floats per RGBA pixel initialized to white
@@ -300,12 +300,11 @@ class BatchedMesh extends Mesh {
 
 		}
 
-		const geometryCount = this._geometryCount;
 		const boundingBox = this.boundingBox;
 		const drawInfo = this._drawInfo;
 
 		boundingBox.makeEmpty();
-		for ( let i = 0; i < geometryCount; i ++ ) {
+		for ( let i = 0, l = drawInfo.length; i < l; i ++ ) {
 
 			if ( drawInfo[ i ].active === false ) continue;
 

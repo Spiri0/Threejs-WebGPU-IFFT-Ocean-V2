@@ -1,14 +1,16 @@
-import Node, { addNodeClass } from '../core/Node.js';
+import Node, { registerNode } from '../core/Node.js';
 import { NodeUpdateType } from '../core/constants.js';
-import { nodeObject } from '../shadernode/ShaderNode.js';
+import { nodeObject } from '../tsl/TSLBase.js';
 import { attribute } from '../core/AttributeNode.js';
 import { reference, referenceBuffer } from './ReferenceNode.js';
 import { add } from '../math/OperatorNode.js';
-import { normalLocal } from './NormalNode.js';
-import { positionLocal } from './PositionNode.js';
-import { tangentLocal } from './TangentNode.js';
+import { normalLocal } from './Normal.js';
+import { positionLocal, positionPrevious } from './Position.js';
+import { tangentLocal } from './Tangent.js';
 import { uniform } from '../core/UniformNode.js';
 import { buffer } from './BufferNode.js';
+
+const _frameId = new WeakMap();
 
 class SkinningNode extends Node {
 
@@ -45,21 +47,22 @@ class SkinningNode extends Node {
 		this.bindMatrixNode = bindMatrixNode;
 		this.bindMatrixInverseNode = bindMatrixInverseNode;
 		this.boneMatricesNode = boneMatricesNode;
+		this.previousBoneMatricesNode = null;
 
 	}
 
-	setup( builder ) {
+	getSkinnedPosition( boneMatrices = this.boneMatricesNode, position = positionLocal ) {
 
-		const { skinIndexNode, skinWeightNode, bindMatrixNode, bindMatrixInverseNode, boneMatricesNode } = this;
+		const { skinIndexNode, skinWeightNode, bindMatrixNode, bindMatrixInverseNode } = this;
 
-		const boneMatX = boneMatricesNode.element( skinIndexNode.x );
-		const boneMatY = boneMatricesNode.element( skinIndexNode.y );
-		const boneMatZ = boneMatricesNode.element( skinIndexNode.z );
-		const boneMatW = boneMatricesNode.element( skinIndexNode.w );
+		const boneMatX = boneMatrices.element( skinIndexNode.x );
+		const boneMatY = boneMatrices.element( skinIndexNode.y );
+		const boneMatZ = boneMatrices.element( skinIndexNode.z );
+		const boneMatW = boneMatrices.element( skinIndexNode.w );
 
 		// POSITION
 
-		const skinVertex = bindMatrixNode.mul( positionLocal );
+		const skinVertex = bindMatrixNode.mul( position );
 
 		const skinned = add(
 			boneMatX.mul( skinWeightNode.x ).mul( skinVertex ),
@@ -68,7 +71,18 @@ class SkinningNode extends Node {
 			boneMatW.mul( skinWeightNode.w ).mul( skinVertex )
 		);
 
-		const skinPosition = bindMatrixInverseNode.mul( skinned ).xyz;
+		return bindMatrixInverseNode.mul( skinned ).xyz;
+
+	}
+
+	getSkinnedNormal( boneMatrices = this.boneMatricesNode, normal = normalLocal ) {
+
+		const { skinIndexNode, skinWeightNode, bindMatrixNode, bindMatrixInverseNode } = this;
+
+		const boneMatX = boneMatrices.element( skinIndexNode.x );
+		const boneMatY = boneMatrices.element( skinIndexNode.y );
+		const boneMatZ = boneMatrices.element( skinIndexNode.z );
+		const boneMatW = boneMatrices.element( skinIndexNode.w );
 
 		// NORMAL
 
@@ -81,16 +95,58 @@ class SkinningNode extends Node {
 
 		skinMatrix = bindMatrixInverseNode.mul( skinMatrix ).mul( bindMatrixNode );
 
-		const skinNormal = skinMatrix.transformDirection( normalLocal ).xyz;
+		return skinMatrix.transformDirection( normal ).xyz;
 
-		// ASSIGNS
+	}
+
+	getPreviousSkinnedPosition( builder ) {
+
+		const skinnedMesh = builder.object;
+
+		if ( this.previousBoneMatricesNode === null ) {
+
+			skinnedMesh.skeleton.previousBoneMatrices = new Float32Array( skinnedMesh.skeleton.boneMatrices );
+
+			this.previousBoneMatricesNode = referenceBuffer( 'skeleton.previousBoneMatrices', 'mat4', skinnedMesh.skeleton.bones.length );
+
+		}
+
+		return this.getSkinnedPosition( this.previousBoneMatricesNode, positionPrevious );
+
+	}
+
+	needsPreviousBoneMatrices( builder ) {
+
+		const mrt = builder.renderer.getMRT();
+
+		return mrt && mrt.has( 'velocity' );
+
+	}
+
+	setup( builder ) {
+
+		if ( this.needsPreviousBoneMatrices( builder ) ) {
+
+			positionPrevious.assign( this.getPreviousSkinnedPosition( builder ) );
+
+		}
+
+		const skinPosition = this.getSkinnedPosition();
+
 
 		positionLocal.assign( skinPosition );
-		normalLocal.assign( skinNormal );
 
-		if ( builder.hasGeometryAttribute( 'tangent' ) ) {
+		if ( builder.hasGeometryAttribute( 'normal' ) ) {
 
-			tangentLocal.assign( skinNormal );
+			const skinNormal = this.getSkinnedNormal();
+
+			normalLocal.assign( skinNormal );
+
+			if ( builder.hasGeometryAttribute( 'tangent' ) ) {
+
+				tangentLocal.assign( skinNormal );
+
+			}
 
 		}
 
@@ -109,8 +165,15 @@ class SkinningNode extends Node {
 	update( frame ) {
 
 		const object = this.useReference ? frame.object : this.skinnedMesh;
+		const skeleton = object.skeleton;
 
-		object.skeleton.update();
+		if ( _frameId.get( skeleton ) === frame.frameId ) return;
+
+		_frameId.set( skeleton, frame.frameId );
+
+		if ( this.previousBoneMatricesNode !== null ) skeleton.previousBoneMatrices.set( skeleton.boneMatrices );
+
+		skeleton.update();
 
 	}
 
@@ -118,7 +181,7 @@ class SkinningNode extends Node {
 
 export default SkinningNode;
 
+SkinningNode.type = /*@__PURE__*/ registerNode( 'Skinning', SkinningNode );
+
 export const skinning = ( skinnedMesh ) => nodeObject( new SkinningNode( skinnedMesh ) );
 export const skinningReference = ( skinnedMesh ) => nodeObject( new SkinningNode( skinnedMesh, true ) );
-
-addNodeClass( 'SkinningNode', SkinningNode );

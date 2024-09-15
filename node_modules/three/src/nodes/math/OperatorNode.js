@@ -1,6 +1,6 @@
+import { registerNode } from '../core/Node.js';
 import TempNode from '../core/TempNode.js';
-import { addNodeClass } from '../core/Node.js';
-import { addNodeElement, nodeProxy } from '../shadernode/ShaderNode.js';
+import { addMethodChaining, nodeProxy } from '../tsl/TSLCore.js';
 
 class OperatorNode extends TempNode {
 
@@ -116,7 +116,7 @@ class OperatorNode extends TempNode {
 
 					typeB = typeA;
 
-				} else {
+				} else if ( typeA !== typeB ) {
 
 					typeA = typeB = 'float';
 
@@ -163,19 +163,51 @@ class OperatorNode extends TempNode {
 
 			if ( op === '<' && outputLength > 1 ) {
 
-				return builder.format( `${ builder.getMethod( 'lessThan' ) }( ${ a }, ${ b } )`, type, output );
+				if ( builder.useComparisonMethod ) {
+
+					return builder.format( `${ builder.getMethod( 'lessThan', output ) }( ${ a }, ${ b } )`, type, output );
+
+				} else {
+
+					return builder.format( `( ${ a } < ${ b } )`, type, output );
+
+				}
 
 			} else if ( op === '<=' && outputLength > 1 ) {
 
-				return builder.format( `${ builder.getMethod( 'lessThanEqual' ) }( ${ a }, ${ b } )`, type, output );
+				if ( builder.useComparisonMethod ) {
+
+					return builder.format( `${ builder.getMethod( 'lessThanEqual', output ) }( ${ a }, ${ b } )`, type, output );
+
+				} else {
+
+					return builder.format( `( ${ a } <= ${ b } )`, type, output );
+
+				}
 
 			} else if ( op === '>' && outputLength > 1 ) {
 
-				return builder.format( `${ builder.getMethod( 'greaterThan' ) }( ${ a }, ${ b } )`, type, output );
+				if ( builder.useComparisonMethod ) {
+
+					return builder.format( `${ builder.getMethod( 'greaterThan', output ) }( ${ a }, ${ b } )`, type, output );
+
+				} else {
+
+					return builder.format( `( ${ a } > ${ b } )`, type, output );
+
+				}
 
 			} else if ( op === '>=' && outputLength > 1 ) {
 
-				return builder.format( `${ builder.getMethod( 'greaterThanEqual' ) }( ${ a }, ${ b } )`, type, output );
+				if ( builder.useComparisonMethod ) {
+
+					return builder.format( `${ builder.getMethod( 'greaterThanEqual', output ) }( ${ a }, ${ b } )`, type, output );
+
+				} else {
+
+					return builder.format( `( ${ a } >= ${ b } )`, type, output );
+
+				}
 
 			} else if ( op === '!' || op === '~' ) {
 
@@ -227,48 +259,58 @@ class OperatorNode extends TempNode {
 
 export default OperatorNode;
 
-export const add = nodeProxy( OperatorNode, '+' );
-export const sub = nodeProxy( OperatorNode, '-' );
-export const mul = nodeProxy( OperatorNode, '*' );
-export const div = nodeProxy( OperatorNode, '/' );
-export const remainder = nodeProxy( OperatorNode, '%' );
-export const equal = nodeProxy( OperatorNode, '==' );
-export const notEqual = nodeProxy( OperatorNode, '!=' );
-export const lessThan = nodeProxy( OperatorNode, '<' );
-export const greaterThan = nodeProxy( OperatorNode, '>' );
-export const lessThanEqual = nodeProxy( OperatorNode, '<=' );
-export const greaterThanEqual = nodeProxy( OperatorNode, '>=' );
-export const and = nodeProxy( OperatorNode, '&&' );
-export const or = nodeProxy( OperatorNode, '||' );
-export const not = nodeProxy( OperatorNode, '!' );
-export const xor = nodeProxy( OperatorNode, '^^' );
-export const bitAnd = nodeProxy( OperatorNode, '&' );
-export const bitNot = nodeProxy( OperatorNode, '~' );
-export const bitOr = nodeProxy( OperatorNode, '|' );
-export const bitXor = nodeProxy( OperatorNode, '^' );
-export const shiftLeft = nodeProxy( OperatorNode, '<<' );
-export const shiftRight = nodeProxy( OperatorNode, '>>' );
+OperatorNode.type = /*@__PURE__*/ registerNode( 'Operator', OperatorNode );
 
-addNodeElement( 'add', add );
-addNodeElement( 'sub', sub );
-addNodeElement( 'mul', mul );
-addNodeElement( 'div', div );
-addNodeElement( 'remainder', remainder );
-addNodeElement( 'equal', equal );
-addNodeElement( 'notEqual', notEqual );
-addNodeElement( 'lessThan', lessThan );
-addNodeElement( 'greaterThan', greaterThan );
-addNodeElement( 'lessThanEqual', lessThanEqual );
-addNodeElement( 'greaterThanEqual', greaterThanEqual );
-addNodeElement( 'and', and );
-addNodeElement( 'or', or );
-addNodeElement( 'not', not );
-addNodeElement( 'xor', xor );
-addNodeElement( 'bitAnd', bitAnd );
-addNodeElement( 'bitNot', bitNot );
-addNodeElement( 'bitOr', bitOr );
-addNodeElement( 'bitXor', bitXor );
-addNodeElement( 'shiftLeft', shiftLeft );
-addNodeElement( 'shiftRight', shiftRight );
+export const add = /*@__PURE__*/ nodeProxy( OperatorNode, '+' );
+export const sub = /*@__PURE__*/ nodeProxy( OperatorNode, '-' );
+export const mul = /*@__PURE__*/ nodeProxy( OperatorNode, '*' );
+export const div = /*@__PURE__*/ nodeProxy( OperatorNode, '/' );
+export const modInt = /*@__PURE__*/ nodeProxy( OperatorNode, '%' );
+export const equal = /*@__PURE__*/ nodeProxy( OperatorNode, '==' );
+export const notEqual = /*@__PURE__*/ nodeProxy( OperatorNode, '!=' );
+export const lessThan = /*@__PURE__*/ nodeProxy( OperatorNode, '<' );
+export const greaterThan = /*@__PURE__*/ nodeProxy( OperatorNode, '>' );
+export const lessThanEqual = /*@__PURE__*/ nodeProxy( OperatorNode, '<=' );
+export const greaterThanEqual = /*@__PURE__*/ nodeProxy( OperatorNode, '>=' );
+export const and = /*@__PURE__*/ nodeProxy( OperatorNode, '&&' );
+export const or = /*@__PURE__*/ nodeProxy( OperatorNode, '||' );
+export const not = /*@__PURE__*/ nodeProxy( OperatorNode, '!' );
+export const xor = /*@__PURE__*/ nodeProxy( OperatorNode, '^^' );
+export const bitAnd = /*@__PURE__*/ nodeProxy( OperatorNode, '&' );
+export const bitNot = /*@__PURE__*/ nodeProxy( OperatorNode, '~' );
+export const bitOr = /*@__PURE__*/ nodeProxy( OperatorNode, '|' );
+export const bitXor = /*@__PURE__*/ nodeProxy( OperatorNode, '^' );
+export const shiftLeft = /*@__PURE__*/ nodeProxy( OperatorNode, '<<' );
+export const shiftRight = /*@__PURE__*/ nodeProxy( OperatorNode, '>>' );
 
-addNodeClass( 'OperatorNode', OperatorNode );
+addMethodChaining( 'add', add );
+addMethodChaining( 'sub', sub );
+addMethodChaining( 'mul', mul );
+addMethodChaining( 'div', div );
+addMethodChaining( 'modInt', modInt );
+addMethodChaining( 'equal', equal );
+addMethodChaining( 'notEqual', notEqual );
+addMethodChaining( 'lessThan', lessThan );
+addMethodChaining( 'greaterThan', greaterThan );
+addMethodChaining( 'lessThanEqual', lessThanEqual );
+addMethodChaining( 'greaterThanEqual', greaterThanEqual );
+addMethodChaining( 'and', and );
+addMethodChaining( 'or', or );
+addMethodChaining( 'not', not );
+addMethodChaining( 'xor', xor );
+addMethodChaining( 'bitAnd', bitAnd );
+addMethodChaining( 'bitNot', bitNot );
+addMethodChaining( 'bitOr', bitOr );
+addMethodChaining( 'bitXor', bitXor );
+addMethodChaining( 'shiftLeft', shiftLeft );
+addMethodChaining( 'shiftRight', shiftRight );
+
+
+export const remainder = ( ...params ) => { // @deprecated, r168
+
+	console.warn( 'TSL.OperatorNode: .remainder() has been renamed to .modInt().' );
+	return modInt( ...params );
+
+};
+
+addMethodChaining( 'remainder', remainder );

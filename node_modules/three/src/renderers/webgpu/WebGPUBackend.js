@@ -2,7 +2,7 @@
 import 'https://greggman.github.io/webgpu-avoid-redundant-state-setting/webgpu-check-redundant-state-setting.js';
 //*/
 
-import { GPUFeatureName, GPUTextureFormat, GPULoadOp, GPUStoreOp, GPUIndexFormat, GPUTextureViewDimension } from './utils/WebGPUConstants.js';
+import { GPUFeatureName, GPULoadOp, GPUStoreOp, GPUIndexFormat, GPUTextureViewDimension } from './utils/WebGPUConstants.js';
 
 import WGSLNodeBuilder from './nodes/WGSLNodeBuilder.js';
 import Backend from '../common/Backend.js';
@@ -108,9 +108,11 @@ class WebGPUBackend extends Backend {
 
 		const alphaMode = parameters.alpha ? 'premultiplied' : 'opaque';
 
+		this.trackTimestamp = this.trackTimestamp && this.hasFeature( GPUFeatureName.TimestampQuery );
+
 		this.context.configure( {
 			device: this.device,
-			format: GPUTextureFormat.BGRA8Unorm,
+			format: this.utils.getPreferredCanvasFormat(),
 			usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
 			alphaMode: alphaMode
 		} );
@@ -193,22 +195,16 @@ class WebGPUBackend extends Backend {
 
 		let descriptors = renderTargetData.descriptors;
 
-		if ( descriptors === undefined ) {
-
-			descriptors = [];
-
-			renderTargetData.descriptors = descriptors;
-
-		}
-
-		if ( renderTargetData.width !== renderTarget.width ||
+		if ( descriptors === undefined ||
+			renderTargetData.width !== renderTarget.width ||
 			renderTargetData.height !== renderTarget.height ||
 			renderTargetData.activeMipmapLevel !== renderTarget.activeMipmapLevel ||
-			renderTargetData.samples !== renderTarget.samples ||
-			descriptors.length !== renderTarget.textures.length
+			renderTargetData.samples !== renderTarget.samples
 		) {
 
-			descriptors.length = 0;
+			descriptors = {};
+
+			renderTargetData.descriptors = descriptors;
 
 			// dispose
 
@@ -224,7 +220,9 @@ class WebGPUBackend extends Backend {
 
 		}
 
-		let descriptor = descriptors[ renderContext.activeCubeFace ];
+		const cacheKey = renderContext.getCacheKey();
+
+		let descriptor = descriptors[ cacheKey ];
 
 		if ( descriptor === undefined ) {
 
@@ -276,7 +274,7 @@ class WebGPUBackend extends Backend {
 				depthStencilAttachment
 			};
 
-			descriptors[ renderContext.activeCubeFace ] = descriptor;
+			descriptors[ cacheKey ] = descriptor;
 
 			renderTargetData.width = renderTarget.width;
 			renderTargetData.height = renderTarget.height;
@@ -349,7 +347,7 @@ class WebGPUBackend extends Backend {
 
 				if ( renderContext.clearColor ) {
 
-					colorAttachment.clearValue = renderContext.clearColorValue;
+					colorAttachment.clearValue = i === 0 ? renderContext.clearColorValue : { r: 0, g: 0, b: 0, a: 1 };
 					colorAttachment.loadOp = GPULoadOp.Clear;
 					colorAttachment.storeOp = GPUStoreOp.Store;
 
@@ -427,7 +425,8 @@ class WebGPUBackend extends Backend {
 		renderContextData.descriptor = descriptor;
 		renderContextData.encoder = encoder;
 		renderContextData.currentPass = currentPass;
-		renderContextData.currentSets = { attributes: {} };
+		renderContextData.currentSets = { attributes: {}, pipeline: null, index: null };
+		renderContextData.renderBundles = [];
 
 		//
 
@@ -441,7 +440,7 @@ class WebGPUBackend extends Backend {
 
 			const { x, y, width, height } = renderContext.scissorValue;
 
-			currentPass.setScissorRect( x, renderContext.height - height - y, width, height );
+			currentPass.setScissorRect( x, y, width, height );
 
 		}
 
@@ -452,9 +451,8 @@ class WebGPUBackend extends Backend {
 		const renderContextData = this.get( renderContext );
 		const occlusionQueryCount = renderContext.occlusionQueryCount;
 
-		if ( renderContextData.renderBundles !== undefined && renderContextData.renderBundles.length > 0 ) {
+		if ( renderContextData.renderBundles.length > 0 ) {
 
-			renderContextData.registerBundlesPhase = false;
 			renderContextData.currentPass.executeBundles( renderContextData.renderBundles );
 
 		}
@@ -587,7 +585,7 @@ class WebGPUBackend extends Backend {
 		const { currentPass } = this.get( renderContext );
 		const { x, y, width, height, minDepth, maxDepth } = renderContext.viewportValue;
 
-		currentPass.setViewport( x, renderContext.height - height - y, width, height, minDepth, maxDepth );
+		currentPass.setViewport( x, y, width, height, minDepth, maxDepth );
 
 	}
 
@@ -608,7 +606,19 @@ class WebGPUBackend extends Backend {
 
 			const clearColor = this.getClearColor();
 
-			clearValue = { r: clearColor.r, g: clearColor.g, b: clearColor.b, a: clearColor.a };
+			if ( this.renderer.alpha === true ) {
+
+				// premultiply alpha
+
+				const a = clearColor.a;
+
+				clearValue = { r: clearColor.r * a, g: clearColor.g * a, b: clearColor.b * a, a: a };
+
+			} else {
+
+				clearValue = { r: clearColor.r, g: clearColor.g, b: clearColor.b, a: clearColor.a };
+
+			}
 
 		}
 
@@ -820,26 +830,11 @@ class WebGPUBackend extends Backend {
 	draw( renderObject, info ) {
 
 		const { object, geometry, context, pipeline } = renderObject;
-
 		const bindings = renderObject.getBindings();
-		const contextData = this.get( context );
-		const pipelineGPU = this.get( pipeline ).pipeline;
-		const currentSets = contextData.currentSets;
-
-		const renderObjectData = this.get( renderObject );
-
-		const { bundleEncoder, renderBundle, lastPipelineGPU } = renderObjectData;
-
 		const renderContextData = this.get( context );
-
-		if ( renderContextData.registerBundlesPhase === true && bundleEncoder !== undefined && lastPipelineGPU === pipelineGPU ) {
-
-			renderContextData.renderBundles.push( renderBundle );
-			return;
-
-		}
-
-		const passEncoderGPU = this.renderer._currentRenderBundle ? this.createBundleEncoder( context, renderObject ) : contextData.currentPass;
+		const pipelineGPU = this.get( pipeline ).pipeline;
+		const currentSets = renderContextData.currentSets;
+		const passEncoderGPU = renderContextData.currentPass;
 
 		// pipeline
 
@@ -858,7 +853,7 @@ class WebGPUBackend extends Backend {
 			const bindGroup = bindings[ i ];
 			const bindingsData = this.get( bindGroup );
 
-			passEncoderGPU.setBindGroup( i, bindingsData.group );
+			passEncoderGPU.setBindGroup( bindGroup.index, bindingsData.group );
 
 		}
 
@@ -906,27 +901,27 @@ class WebGPUBackend extends Backend {
 
 		// occlusion queries - handle multiple consecutive draw calls for an object
 
-		if ( contextData.occlusionQuerySet !== undefined ) {
+		if ( renderContextData.occlusionQuerySet !== undefined ) {
 
-			const lastObject = contextData.lastOcclusionObject;
+			const lastObject = renderContextData.lastOcclusionObject;
 
 			if ( lastObject !== object ) {
 
 				if ( lastObject !== null && lastObject.occlusionTest === true ) {
 
 					passEncoderGPU.endOcclusionQuery();
-					contextData.occlusionQueryIndex ++;
+					renderContextData.occlusionQueryIndex ++;
 
 				}
 
 				if ( object.occlusionTest === true ) {
 
-					passEncoderGPU.beginOcclusionQuery( contextData.occlusionQueryIndex );
-					contextData.occlusionQueryObjects[ contextData.occlusionQueryIndex ] = object;
+					passEncoderGPU.beginOcclusionQuery( renderContextData.occlusionQueryIndex );
+					renderContextData.occlusionQueryObjects[ renderContextData.occlusionQueryIndex ] = object;
 
 				}
 
-				contextData.lastOcclusionObject = object;
+				renderContextData.lastOcclusionObject = object;
 
 			}
 
@@ -947,14 +942,14 @@ class WebGPUBackend extends Backend {
 			const drawCount = object._multiDrawCount;
 			const drawInstances = object._multiDrawInstances;
 
-			const bytesPerElement = index.bytesPerElement || 1;
+			const bytesPerElement = hasIndex ? index.array.BYTES_PER_ELEMENT : 1;
 
 			for ( let i = 0; i < drawCount; i ++ ) {
 
 				const count = drawInstances ? drawInstances[ i ] : 1;
 				const firstInstance = count > 1 ? 0 : i;
 
-				passEncoderGPU.drawIndexed( counts[ i ] / bytesPerElement, count, starts[ i ] / 4, 0, firstInstance );
+				passEncoderGPU.drawIndexed( counts[ i ], count, starts[ i ] / bytesPerElement, 0, firstInstance );
 
 			}
 
@@ -974,15 +969,6 @@ class WebGPUBackend extends Backend {
 			passEncoderGPU.draw( vertexCount, instanceCount, firstVertex, 0 );
 
 			info.update( object, vertexCount, instanceCount );
-
-		}
-
-		if ( this.renderer._currentRenderBundle ) {
-
-			const renderBundle = passEncoderGPU.finish();
-			renderObjectData.lastPipelineGPU = pipelineGPU;
-			renderObjectData.renderBundle = renderBundle;
-			renderObjectData.bundleEncoder = passEncoderGPU;
 
 		}
 
@@ -1018,7 +1004,7 @@ class WebGPUBackend extends Backend {
 			data.sampleCount !== sampleCount || data.colorSpace !== colorSpace ||
 			data.colorFormat !== colorFormat || data.depthStencilFormat !== depthStencilFormat ||
 			data.primitiveTopology !== primitiveTopology ||
-			data.clippingContextVersion !== renderObject.clippingContextVersion
+			data.clippingContextCacheKey !== renderObject.clippingContext.cacheKey
 		) {
 
 			data.material = material; data.materialVersion = material.version;
@@ -1036,7 +1022,7 @@ class WebGPUBackend extends Backend {
 			data.colorFormat = colorFormat;
 			data.depthStencilFormat = depthStencilFormat;
 			data.primitiveTopology = primitiveTopology;
-			data.clippingContextVersion = renderObject.clippingContextVersion;
+			data.clippingContextCacheKey = renderObject.clippingContext.cacheKey;
 
 			needsUpdate = true;
 
@@ -1066,10 +1052,11 @@ class WebGPUBackend extends Backend {
 			utils.getSampleCountRenderContext( renderContext ),
 			utils.getCurrentColorSpace( renderContext ), utils.getCurrentColorFormat( renderContext ), utils.getCurrentDepthStencilFormat( renderContext ),
 			utils.getPrimitiveTopology( object, material ),
-			renderObject.clippingContextVersion
+			renderObject.clippingContext.cacheKey
 		].join();
 
 	}
+
 
 	// textures
 
@@ -1124,7 +1111,7 @@ class WebGPUBackend extends Backend {
 
 	initTimestampQuery( renderContext, descriptor ) {
 
-		if ( ! this.hasFeature( GPUFeatureName.TimestampQuery ) || ! this.trackTimestamp ) return;
+		if ( ! this.trackTimestamp ) return;
 
 		const renderContextData = this.get( renderContext );
 
@@ -1154,9 +1141,10 @@ class WebGPUBackend extends Backend {
 
 	prepareTimestampBuffer( renderContext, encoder ) {
 
-		if ( ! this.hasFeature( GPUFeatureName.TimestampQuery ) || ! this.trackTimestamp ) return;
+		if ( ! this.trackTimestamp ) return;
 
 		const renderContextData = this.get( renderContext );
+
 
 		const size = 2 * BigInt64Array.BYTES_PER_ELEMENT;
 
@@ -1189,7 +1177,7 @@ class WebGPUBackend extends Backend {
 
 	async resolveTimestampAsync( renderContext, type = 'render' ) {
 
-		if ( ! this.hasFeature( GPUFeatureName.TimestampQuery ) || ! this.trackTimestamp ) return;
+		if ( ! this.trackTimestamp ) return;
 
 		const renderContextData = this.get( renderContext );
 
@@ -1258,9 +1246,39 @@ class WebGPUBackend extends Backend {
 
 	}
 
-	createBundleEncoder( renderContext, renderObject ) {
+	beginBundle( renderContext ) {
 
-		return this.pipelineUtils.createBundleEncoder( renderContext, renderObject );
+		const renderContextData = this.get( renderContext );
+
+		renderContextData._currentPass = renderContextData.currentPass;
+		renderContextData._currentSets = renderContextData.currentSets;
+
+		renderContextData.currentSets = { attributes: {}, pipeline: null, index: null };
+		renderContextData.currentPass = this.pipelineUtils.createBundleEncoder( renderContext );
+
+	}
+
+	finishBundle( renderContext, bundle ) {
+
+		const renderContextData = this.get( renderContext );
+
+		const bundleEncoder = renderContextData.currentPass;
+		const bundleGPU = bundleEncoder.finish();
+
+		this.get( bundle ).bundleGPU = bundleGPU;
+
+		// restore render pass state
+
+		renderContextData.currentSets = renderContextData._currentSets;
+		renderContextData.currentPass = renderContextData._currentPass;
+
+	}
+
+	addBundle( renderContext, bundle ) {
+
+		const renderContextData = this.get( renderContext );
+
+		renderContextData.renderBundles.push( this.get( bundle ).bundleGPU );
 
 	}
 
@@ -1464,7 +1482,7 @@ class WebGPUBackend extends Backend {
 		if ( renderContext.stencil ) descriptor.depthStencilAttachment.stencilLoadOp = GPULoadOp.Load;
 
 		renderContextData.currentPass = encoder.beginRenderPass( descriptor );
-		renderContextData.currentSets = { attributes: {} };
+		renderContextData.currentSets = { attributes: {}, pipeline: null, index: null };
 
 	}
 

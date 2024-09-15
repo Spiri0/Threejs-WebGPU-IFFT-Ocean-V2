@@ -1,14 +1,12 @@
+import { registerNode } from '../core/Node.js';
 import CodeNode from './CodeNode.js';
-import { addNodeClass } from '../core/Node.js';
-import { nodeObject } from '../shadernode/ShaderNode.js';
+import { nodeObject } from '../tsl/TSLBase.js';
 
 class FunctionNode extends CodeNode {
 
 	constructor( code = '', includes = [], language = '' ) {
 
 		super( code, includes, language );
-
-		this.keywords = {};
 
 	}
 
@@ -63,23 +61,7 @@ class FunctionNode extends CodeNode {
 
 		const propertyName = builder.getPropertyName( nodeCode );
 
-		let code = this.getNodeFunction( builder ).getCode( propertyName );
-
-		const keywords = this.keywords;
-		const keywordsProperties = Object.keys( keywords );
-
-		if ( keywordsProperties.length > 0 ) {
-
-			for ( const property of keywordsProperties ) {
-
-				const propertyRegExp = new RegExp( `\\b${property}\\b`, 'g' );
-				const nodeProperty = keywords[ property ].build( builder, 'property' );
-
-				code = code.replace( propertyRegExp, nodeProperty );
-
-			}
-
-		}
+		const code = this.getNodeFunction( builder ).getCode( propertyName );
 
 		nodeCode.code = code + '\n';
 
@@ -98,6 +80,8 @@ class FunctionNode extends CodeNode {
 }
 
 export default FunctionNode;
+
+FunctionNode.type = /*@__PURE__*/ registerNode( 'Function', FunctionNode );
 
 const nativeFn = ( code, includes = [], language = '' ) => {
 
@@ -126,5 +110,3 @@ const nativeFn = ( code, includes = [], language = '' ) => {
 
 export const glslFn = ( code, includes ) => nativeFn( code, includes, 'glsl' );
 export const wgslFn = ( code, includes ) => nativeFn( code, includes, 'wgsl' );
-
-addNodeClass( 'FunctionNode', FunctionNode );

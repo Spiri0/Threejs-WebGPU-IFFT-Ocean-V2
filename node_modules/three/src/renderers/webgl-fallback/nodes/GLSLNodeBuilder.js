@@ -1,15 +1,15 @@
-import { MathNode, GLSLNodeParser, NodeBuilder, TextureNode, vectorComponents } from '../../../nodes/Nodes.js';
+import { GLSLNodeParser, NodeBuilder, TextureNode, vectorComponents } from '../../../nodes/Nodes.js';
 
 import NodeUniformBuffer from '../../common/nodes/NodeUniformBuffer.js';
 import NodeUniformsGroup from '../../common/nodes/NodeUniformsGroup.js';
 
 import { NodeSampledTexture, NodeSampledCubeTexture, NodeSampledTexture3D } from '../../common/nodes/NodeSampledTexture.js';
 
-import { ByteType, ShortType, RGBAIntegerFormat, RGBIntegerFormat, RedIntegerFormat, RGIntegerFormat, UnsignedByteType, UnsignedIntType, UnsignedShortType, RedFormat, RGFormat, IntType, RGBFormat, RGBAFormat, FloatType } from '../../../constants.js';
+import { NoColorSpace, ByteType, ShortType, RGBAIntegerFormat, RGBIntegerFormat, RedIntegerFormat, RGIntegerFormat, UnsignedByteType, UnsignedIntType, UnsignedShortType, RedFormat, RGFormat, IntType, RGBFormat, RGBAFormat, FloatType } from '../../../constants.js';
 import { DataTexture } from '../../../textures/DataTexture.js';
 
 const glslMethods = {
-	[ MathNode.ATAN2 ]: 'atan',
+	atan2: 'atan',
 	textureDimensions: 'textureSize',
 	equals: 'equal'
 };
@@ -54,8 +54,17 @@ class GLSLNodeBuilder extends NodeBuilder {
 
 		this.uniformGroups = {};
 		this.transforms = [];
+		this.extensions = {};
 
 		this.instanceBindGroups = false;
+
+		this.useComparisonMethod = true;
+
+	}
+
+	needsColorSpaceToLinearSRGB( texture ) {
+
+		return texture.isVideoTexture === true && texture.colorSpace !== NoColorSpace;
 
 	}
 
@@ -198,7 +207,7 @@ ${ flowData.code }
 		const nodeUniform = this.getUniformFromNode( attribute.pboNode, 'texture', this.shaderStage, this.context.label );
 		const textureName = this.getPropertyName( nodeUniform );
 
-		indexNode.increaseUsage( this ); // force cache generate to be used as index in x,y
+		this.increaseUsage( indexNode ); // force cache generate to be used as index in x,y
 		const indexSnippet = indexNode.build( this, 'uint' );
 
 		const elementNodeData = this.getDataFromNode( storageArrayElementNode );
@@ -384,7 +393,7 @@ ${ flowData.code }
 
 					snippet = `sampler2DShadow ${ uniform.name };`;
 
-				} else if ( texture.isDataArrayTexture === true ) {
+				} else if ( texture.isDataArrayTexture === true || texture.isCompressedArrayTexture === true ) {
 
 					snippet = `${typePrefix}sampler2DArray ${ uniform.name };`;
 
@@ -604,6 +613,16 @@ ${ flowData.code }
 
 	}
 
+	getInvocationLocalIndex() {
+
+		const workgroupSize = this.object.workgroupSize;
+
+		const size = workgroupSize.reduce( ( acc, curr ) => acc * curr, 1 );
+
+		return `uint( gl_InstanceID ) % ${size}u`;
+
+	}
+
 	getDrawIndex() {
 
 		const extensions = this.renderer.backend.extensions;
@@ -626,7 +645,7 @@ ${ flowData.code }
 
 	getFragCoord() {
 
-		return 'gl_FragCoord';
+		return 'gl_FragCoord.xy';
 
 	}
 
@@ -636,9 +655,24 @@ ${ flowData.code }
 
 	}
 
+	enableExtension( name, behavior, shaderStage = this.shaderStage ) {
+
+		const map = this.extensions[ shaderStage ] || ( this.extensions[ shaderStage ] = new Map() );
+
+		if ( map.has( name ) === false ) {
+
+			map.set( name, {
+				name,
+				behavior
+			} );
+
+		}
+
+	}
+
 	getExtensions( shaderStage ) {
 
-		let extensions = '';
+		const snippets = [];
 
 		if ( shaderStage === 'vertex' ) {
 
@@ -647,13 +681,25 @@ ${ flowData.code }
 
 			if ( isBatchedMesh && ext.has( 'WEBGL_multi_draw' ) ) {
 
-				extensions += '#extension GL_ANGLE_multi_draw : require\n';
+				this.enableExtension( 'GL_ANGLE_multi_draw', 'require', shaderStage );
 
 			}
 
 		}
 
-		return extensions;
+		const extensions = this.extensions[ shaderStage ];
+
+		if ( extensions !== undefined ) {
+
+			for ( const { name, behavior } of extensions.values() ) {
+
+				snippets.push( `#extension ${name} : ${behavior}` );
+
+			}
+
+		}
+
+		return snippets.join( '\n' );
 
 	}
 
@@ -732,6 +778,8 @@ ${vars}
 	_getGLSLVertexCode( shaderData ) {
 
 		return `#version 300 es
+
+${ this.getSignature() }
 
 // extensions 
 ${shaderData.extensions}

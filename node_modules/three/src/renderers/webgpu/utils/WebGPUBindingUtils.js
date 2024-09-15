@@ -9,6 +9,7 @@ class WebGPUBindingUtils {
 	constructor( backend ) {
 
 		this.backend = backend;
+		this.bindGroupLayoutCache = new WeakMap();
 
 	}
 
@@ -95,9 +96,15 @@ class WebGPUBindingUtils {
 
 					} else if ( type === FloatType ) {
 
-						// @TODO: Add support for this soon: backend.hasFeature( 'float32-filterable' )
+						if ( this.backend.hasFeature( 'float32-filterable' ) ) {
 
-						texture.sampleType = GPUTextureSampleType.UnfilterableFloat;
+							texture.sampleType = GPUTextureSampleType.Float;
+
+						} else {
+
+							texture.sampleType = GPUTextureSampleType.UnfilterableFloat;
+
+						}
 
 					}
 
@@ -107,7 +114,7 @@ class WebGPUBindingUtils {
 
 					texture.viewDimension = GPUTextureViewDimension.Cube;
 
-				} else if ( binding.texture.isDataArrayTexture ) {
+				} else if ( binding.texture.isDataArrayTexture || binding.texture.isCompressedArrayTexture ) {
 
 					texture.viewDimension = GPUTextureViewDimension.TwoDArray;
 
@@ -135,12 +142,20 @@ class WebGPUBindingUtils {
 
 	createBindings( bindGroup ) {
 
-		const backend = this.backend;
+		const { backend, bindGroupLayoutCache } = this;
 		const bindingsData = backend.get( bindGroup );
 
 		// setup (static) binding layout and (dynamic) binding group
 
-		const bindLayoutGPU = this.createBindingsLayout( bindGroup );
+		let bindLayoutGPU = bindGroupLayoutCache.get( bindGroup.bindingsReference );
+
+		if ( bindLayoutGPU === undefined ) {
+
+			bindLayoutGPU = this.createBindingsLayout( bindGroup );
+			bindGroupLayoutCache.set( bindGroup.bindingsReference, bindLayoutGPU );
+
+		}
+
 		const bindGroupGPU = this.createBindGroup( bindGroup, bindLayoutGPU );
 
 		bindingsData.layout = bindLayoutGPU;
@@ -219,26 +234,6 @@ class WebGPUBindingUtils {
 
 				const textureData = backend.get( binding.texture );
 
-				let dimensionViewGPU;
-
-				if ( binding.isSampledCubeTexture ) {
-
-					dimensionViewGPU = GPUTextureViewDimension.Cube;
-
-				} else if ( binding.isSampledTexture3D ) {
-
-					dimensionViewGPU = GPUTextureViewDimension.ThreeD;
-
-				} else if ( binding.texture.isDataArrayTexture ) {
-
-					dimensionViewGPU = GPUTextureViewDimension.TwoDArray;
-
-				} else {
-
-					dimensionViewGPU = GPUTextureViewDimension.TwoD;
-
-				}
-
 				let resourceGPU;
 
 				if ( textureData.externalTexture !== undefined ) {
@@ -247,9 +242,38 @@ class WebGPUBindingUtils {
 
 				} else {
 
-					const aspectGPU = GPUTextureAspect.All;
+					const mipLevelCount = binding.store ? 1 : textureData.texture.mipLevelCount;
+					const propertyName = `view-${ textureData.texture.width }-${ textureData.texture.height }-${ mipLevelCount }`;
 
-					resourceGPU = textureData.texture.createView( { aspect: aspectGPU, dimension: dimensionViewGPU, mipLevelCount: binding.store ? 1 : textureData.mipLevelCount } );
+					resourceGPU = textureData[ propertyName ];
+
+					if ( resourceGPU === undefined ) {
+
+						const aspectGPU = GPUTextureAspect.All;
+
+						let dimensionViewGPU;
+
+						if ( binding.isSampledCubeTexture ) {
+
+							dimensionViewGPU = GPUTextureViewDimension.Cube;
+
+						} else if ( binding.isSampledTexture3D ) {
+
+							dimensionViewGPU = GPUTextureViewDimension.ThreeD;
+
+						} else if ( binding.texture.isDataArrayTexture || binding.texture.isCompressedArrayTexture ) {
+
+							dimensionViewGPU = GPUTextureViewDimension.TwoDArray;
+
+						} else {
+
+							dimensionViewGPU = GPUTextureViewDimension.TwoD;
+
+						}
+
+						resourceGPU = textureData[ propertyName ] = textureData.texture.createView( { aspect: aspectGPU, dimension: dimensionViewGPU, mipLevelCount } );
+
+					}
 
 				}
 

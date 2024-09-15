@@ -1,7 +1,8 @@
+import { registerNode } from '../core/Node.js';
 import TextureNode from '../accessors/TextureNode.js';
-import { nodeObject, vec2 } from '../shadernode/ShaderNode.js';
+import { nodeObject } from '../tsl/TSLBase.js';
 import { NodeUpdateType } from '../core/constants.js';
-import { viewportTopLeft } from '../display/ViewportNode.js';
+import { viewportUV } from '../display/ViewportNode.js';
 
 import { HalfFloatType, LinearMipMapLinearFilter } from '../../constants.js';
 import { Plane } from '../../math/Plane.js';
@@ -27,7 +28,7 @@ const _q = new Vector4();
 const _size = new Vector2();
 
 const _defaultRT = new RenderTarget();
-const _defaultUV = vec2( viewportTopLeft.x.oneMinus(), viewportTopLeft.y );
+const _defaultUV = viewportUV.flipX();
 
 let _inReflector = false;
 
@@ -214,11 +215,14 @@ class ReflectorNode extends TextureNode {
 		material.visible = false;
 
 		const currentRenderTarget = renderer.getRenderTarget();
+		const currentMRT = renderer.getMRT();
 
+		renderer.setMRT( null );
 		renderer.setRenderTarget( renderTarget );
 
 		renderer.render( scene, virtualCamera );
 
+		renderer.setMRT( currentMRT );
 		renderer.setRenderTarget( currentRenderTarget );
 
 		material.visible = true;
@@ -233,3 +237,4 @@ export const reflector = ( parameters ) => nodeObject( new ReflectorNode( parame
 
 export default ReflectorNode;
 
+ReflectorNode.type = /*@__PURE__*/ registerNode( 'Reflector', ReflectorNode );

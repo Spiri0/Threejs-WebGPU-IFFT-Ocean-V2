@@ -1,8 +1,8 @@
-import { addNodeClass } from '../core/Node.js';
+import { registerNode } from '../core/Node.js';
 import TempNode from '../core/TempNode.js';
 import { default as TextureNode/*, texture*/ } from '../accessors/TextureNode.js';
 import { NodeUpdateType } from '../core/constants.js';
-import { nodeObject } from '../shadernode/ShaderNode.js';
+import { nodeObject } from '../tsl/TSLBase.js';
 import { uniform } from '../core/UniformNode.js';
 import { viewZToOrthographicDepth, perspectiveDepthToViewZ } from './ViewportDepthNode.js';
 
@@ -27,7 +27,7 @@ class PassTextureNode extends TextureNode {
 
 	setup( builder ) {
 
-		this.passNode.build( builder );
+		if ( builder.object.isQuadMesh ) this.passNode.build( builder );
 
 		return super.setup( builder );
 
@@ -41,19 +41,28 @@ class PassTextureNode extends TextureNode {
 
 }
 
+PassTextureNode.type = /*@__PURE__*/ registerNode( 'PassTexture', PassTextureNode );
+
 class PassMultipleTextureNode extends PassTextureNode {
 
-	constructor( passNode, textureName ) {
+	constructor( passNode, textureName, previousTexture = false ) {
 
 		super( passNode, null );
 
 		this.textureName = textureName;
+		this.previousTexture = previousTexture;
+
+	}
+
+	updateTexture() {
+
+		this.value = this.previousTexture ? this.passNode.getPreviousTexture( this.textureName ) : this.passNode.getTexture( this.textureName );
 
 	}
 
 	setup( builder ) {
 
-		this.value = this.passNode.getTexture( this.textureName );
+		this.updateTexture();
 
 		return super.setup( builder );
 
@@ -61,11 +70,13 @@ class PassMultipleTextureNode extends PassTextureNode {
 
 	clone() {
 
-		return new this.constructor( this.passNode, this.textureName );
+		return new this.constructor( this.passNode, this.textureName, this.previousTexture );
 
 	}
 
 }
+
+PassMultipleTextureNode.type = /*@__PURE__*/ registerNode( 'PassMultipleTexture', PassMultipleTextureNode );
 
 class PassNode extends TempNode {
 
@@ -103,6 +114,9 @@ class PassNode extends TempNode {
 		this._textureNodes = {};
 		this._linearDepthNodes = {};
 		this._viewZNodes = {};
+
+		this._previousTextures = {};
+		this._previousTextureNodes = {};
 
 		this._cameraNear = uniform( 0 );
 		this._cameraFar = uniform( 0 );
@@ -155,6 +169,44 @@ class PassNode extends TempNode {
 
 	}
 
+	getPreviousTexture( name ) {
+
+		let texture = this._previousTextures[ name ];
+
+		if ( texture === undefined ) {
+
+			texture = this.getTexture( name ).clone();
+			texture.isRenderTargetTexture = true;
+
+			this._previousTextures[ name ] = texture;
+
+		}
+
+		return texture;
+
+	}
+
+	toggleTexture( name ) {
+
+		const prevTexture = this._previousTextures[ name ];
+
+		if ( prevTexture !== undefined ) {
+
+			const texture = this._textures[ name ];
+
+			const index = this.renderTarget.textures.indexOf( texture );
+			this.renderTarget.textures[ index ] = prevTexture;
+
+			this._textures[ name ] = prevTexture;
+			this._previousTextures[ name ] = texture;
+
+			this._textureNodes[ name ].updateTexture();
+			this._previousTextureNodes[ name ].updateTexture();
+
+		}
+
+	}
+
 	getTextureNode( name = 'output' ) {
 
 		let textureNode = this._textureNodes[ name ];
@@ -162,6 +214,24 @@ class PassNode extends TempNode {
 		if ( textureNode === undefined ) {
 
 			this._textureNodes[ name ] = textureNode = nodeObject( new PassMultipleTextureNode( this, name ) );
+			this._textureNodes[ name ].updateTexture();
+
+		}
+
+		return textureNode;
+
+	}
+
+	getPreviousTextureNode( name = 'output' ) {
+
+		let textureNode = this._previousTextureNodes[ name ];
+
+		if ( textureNode === undefined ) {
+
+			if ( this._textureNodes[ name ] === undefined ) this.getTextureNode( name );
+
+			this._previousTextureNodes[ name ] = textureNode = nodeObject( new PassMultipleTextureNode( this, name, true ) );
+			this._previousTextureNodes[ name ].updateTexture();
 
 		}
 
@@ -240,6 +310,12 @@ class PassNode extends TempNode {
 		this._cameraNear.value = camera.near;
 		this._cameraFar.value = camera.far;
 
+		for ( const name in this._previousTextures ) {
+
+			this.toggleTexture( name );
+
+		}
+
 		renderer.setRenderTarget( this.renderTarget );
 		renderer.setMRT( this._mrt );
 
@@ -284,8 +360,8 @@ PassNode.DEPTH = 'depth';
 
 export default PassNode;
 
+PassNode.type = /*@__PURE__*/ registerNode( 'Pass', PassNode );
+
 export const pass = ( scene, camera, options ) => nodeObject( new PassNode( PassNode.COLOR, scene, camera, options ) );
 export const passTexture = ( pass, texture ) => nodeObject( new PassTextureNode( pass, texture ) );
 export const depthPass = ( scene, camera ) => nodeObject( new PassNode( PassNode.DEPTH, scene, camera ) );
-
-addNodeClass( 'PassNode', PassNode );

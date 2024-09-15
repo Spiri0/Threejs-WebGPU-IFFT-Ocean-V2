@@ -1,10 +1,11 @@
-import Node, { addNodeClass } from '../core/Node.js';
+import Node, { registerNode } from '../core/Node.js';
 import { NodeUpdateType } from '../core/constants.js';
 import { uniform } from '../core/UniformNode.js';
 import { texture } from './TextureNode.js';
+import { cubeTexture } from './CubeTextureNode.js';
 import { buffer } from './BufferNode.js';
-import { nodeObject } from '../shadernode/ShaderNode.js';
-import { uniforms } from './UniformsNode.js';
+import { nodeObject } from '../tsl/TSLBase.js';
+import { uniformArray } from './UniformArrayNode.js';
 import ArrayElementNode from '../utils/ArrayElementNode.js';
 
 class ReferenceElementNode extends ArrayElementNode {
@@ -37,6 +38,7 @@ class ReferenceElementNode extends ArrayElementNode {
 
 }
 
+// TODO: Extends this from ReferenceBaseNode
 class ReferenceNode extends Node {
 
 	constructor( property, uniformType, object = null, count = null ) {
@@ -72,11 +74,15 @@ class ReferenceNode extends Node {
 
 		} else if ( Array.isArray( this.getValueFromReference() ) ) {
 
-			node = uniforms( null, uniformType );
+			node = uniformArray( null, uniformType );
 
 		} else if ( uniformType === 'texture' ) {
 
 			node = texture( null );
+
+		} else if ( uniformType === 'cubeTexture' ) {
+
+			node = cubeTexture( null );
 
 		} else {
 
@@ -84,7 +90,7 @@ class ReferenceNode extends Node {
 
 		}
 
-		this.node = node;
+		this.node = node.getSelf();
 
 	}
 
@@ -160,7 +166,7 @@ class ReferenceNode extends Node {
 
 export default ReferenceNode;
 
+ReferenceNode.type = /*@__PURE__*/ registerNode( 'Reference', ReferenceNode );
+
 export const reference = ( name, type, object ) => nodeObject( new ReferenceNode( name, type, object ) );
 export const referenceBuffer = ( name, type, count, object ) => nodeObject( new ReferenceNode( name, type, object, count ) );
-
-addNodeClass( 'ReferenceNode', ReferenceNode );

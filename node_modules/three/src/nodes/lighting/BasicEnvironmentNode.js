@@ -1,5 +1,6 @@
+import { registerNode } from '../core/Node.js';
 import LightingNode from './LightingNode.js';
-import { addNodeClass } from '../core/Node.js';
+import { cubeMapNode } from '../utils/CubeMapNode.js';
 
 class BasicEnvironmentNode extends LightingNode {
 
@@ -15,7 +16,7 @@ class BasicEnvironmentNode extends LightingNode {
 
 		// environment property is used in the finish() method of BasicLightingModel
 
-		builder.context.environment = this.envNode;
+		builder.context.environment = cubeMapNode( this.envNode );
 
 	}
 
@@ -23,4 +24,4 @@ class BasicEnvironmentNode extends LightingNode {
 
 export default BasicEnvironmentNode;
 
-addNodeClass( 'BasicEnvironmentNode', BasicEnvironmentNode );
+BasicEnvironmentNode.type = /*@__PURE__*/ registerNode( 'BasicEnvironment', BasicEnvironmentNode );
