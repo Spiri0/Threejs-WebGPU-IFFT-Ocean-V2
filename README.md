@@ -3,7 +3,7 @@ See it running live [here](https://spiri0.github.io/Threejs-WebGPU-IFFT-Ocean-V2
 ![ocean_social](https://github.com/user-attachments/assets/31a04239-c9e2-4e16-ac56-af78e51e4560)
 
 
-Threejs-WebGPU-IFFT-Ocean-V2 r167.1
+Threejs-WebGPU-IFFT-Ocean-V2 r168
 This is a physically real ocean simulation using the jonswap ocean model and inverse fast fourier transformation. The resolution seen here in the live server is quite low with an ifft texture resolution of 128 in favor of the computing power.
 
 If you have a powerful graphics card you can set the TEXTURE_SIZE in src/waves/wave_constants.js from 128 to 256 or 512. This makes a very big difference in the details.
