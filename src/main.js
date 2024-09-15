@@ -117,7 +117,7 @@ class Main extends entity.Entity{
 				/*
 				const cameraDistance = this.camera_.position.length();
 				if(cameraDistance >= 5000){
-					this.MoveCameraToOrigin();
+				this.MoveCameraToOrigin();
 				}
 				*/
                 		const deltaTime = (t - this.previousRAF);

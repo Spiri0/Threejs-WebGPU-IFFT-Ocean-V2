@@ -40,6 +40,7 @@ export const ocean = (() => {
 
 			const oceanDatas = {
 				...params,
+				lodScale: this.params_.waveGenerator.lodScale,
 				cascades: this.params_.waveGenerator.cascades,
 				waveLengths: this.params_.waveGenerator.waveLengths,
 				foamStrength: this.params_.waveGenerator.foamStrength,
@@ -93,12 +94,12 @@ export const ocean = (() => {
 	
 			sky.material.colorNode.parameters.sunPosition.value.copy(this.sun);
 	
-			const skyRollup = params.gui.addFolder("Sky");
+
 			
-			skyRollup.add(params.guiParams.sky, "rayleigh", 0, 4, 0.001).onChange((value) => {
+			this.params_.waveGenerator.skySet.add(params.guiParams.sky, "rayleigh", 0, 4, 0.001).onChange((value) => {
 				sky.material.colorNode.parameters.rayleigh.value = value;
 			});
-			skyRollup.add(params.guiParams.sky, "elevation", 0, 90, 0.01).onChange((value) => {
+			this.params_.waveGenerator.skySet.add(params.guiParams.sky, "elevation", 0, 90, 0.01).onChange((value) => {
 				sky.material.colorNode.parameters.elevation.value = value;
 	
 				const phi = THREE.MathUtils.degToRad(90 - value);
@@ -108,7 +109,7 @@ export const ocean = (() => {
 				sky.material.colorNode.parameters.sunPosition.value.copy(this.sun);
 	
 			});
-			skyRollup.add(params.guiParams.sky, "azimuth", -180, 180, 0.1).onChange((value) => {
+			this.params_.waveGenerator.skySet.add(params.guiParams.sky, "azimuth", -180, 180, 0.1).onChange((value) => {
 				const phi = THREE.MathUtils.degToRad(90 - params.guiParams.sky.elevation);
 				const theta = THREE.MathUtils.degToRad(value);
 	
@@ -127,8 +128,7 @@ export const ocean = (() => {
 			params.guiParams.ocean = {
 				wireframe: false,
 			}
-			const oceanRollup = params.gui.addFolder("Ocean");
-			oceanRollup.add(params.guiParams.ocean, "wireframe").onChange(() => {
+			this.params_.waveGenerator.oceanSet.add(params.guiParams.ocean, "wireframe").onChange(() => {
 				this.material_.wireframe = params.guiParams.ocean.wireframe;
 			});
 		}
