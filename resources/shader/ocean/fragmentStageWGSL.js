@@ -17,15 +17,11 @@ export const fragmentStageWGSL = wgslFn(`
         derivatives0: texture_2d<f32>,
         derivatives1: texture_2d<f32>,
         derivatives2: texture_2d<f32>,
-        derivatives0_sampler: sampler,
-        derivatives1_sampler: sampler,
-        derivatives2_sampler: sampler,
         jacobian0: texture_2d<f32>, 
         jacobian1: texture_2d<f32>,
         jacobian2: texture_2d<f32>,
-        jacobian0_sampler: sampler,
-        jacobian1_sampler: sampler,
-        jacobian2_sampler: sampler,
+        derivative_sampler: sampler,
+        jacobian_sampler: sampler,
         waveLengths: vec3<f32>,
         ifftResolution: f32,
         foamStrength: f32,
@@ -45,13 +41,13 @@ export const fragmentStageWGSL = wgslFn(`
         var vViewDist = length(vViewVector);
         var viewDir = normalize(vViewVector);
 
-        var Normal_0: vec4<f32> = textureSample(derivatives0, derivatives0_sampler, (vMorphedPosition.xz/waveLengths.x)) * vCascadeScales.x;
-        var Normal_1: vec4<f32> = textureSample(derivatives1, derivatives1_sampler, (vMorphedPosition.xz/waveLengths.y)) * vCascadeScales.y;
-        var Normal_2: vec4<f32> = textureSample(derivatives2, derivatives2_sampler, (vMorphedPosition.xz/waveLengths.z)) * vCascadeScales.z;
+        var Normal_0: vec4<f32> = textureSample(derivatives0, derivative_sampler, (vMorphedPosition.xz/waveLengths.x)) * vCascadeScales.x;
+        var Normal_1: vec4<f32> = textureSample(derivatives1, derivative_sampler, (vMorphedPosition.xz/waveLengths.y)) * vCascadeScales.y;
+        var Normal_2: vec4<f32> = textureSample(derivatives2, derivative_sampler, (vMorphedPosition.xz/waveLengths.z)) * vCascadeScales.z;
 
-        var jacobi0: f32 = textureSample(jacobian0, jacobian0_sampler, (vMorphedPosition.xz/waveLengths.x)).x;
-        var jacobi1: f32 = textureSample(jacobian1, jacobian1_sampler, (vMorphedPosition.xz/waveLengths.y)).x;
-        var jacobi2: f32 = textureSample(jacobian2, jacobian2_sampler, (vMorphedPosition.xz/waveLengths.z)).x;
+        var jacobi0: f32 = textureSample(jacobian0, jacobian_sampler, (vMorphedPosition.xz/waveLengths.x)).x;
+        var jacobi1: f32 = textureSample(jacobian1, jacobian_sampler, (vMorphedPosition.xz/waveLengths.y)).x;
+        var jacobi2: f32 = textureSample(jacobian2, jacobian_sampler, (vMorphedPosition.xz/waveLengths.z)).x;
 
 
         
