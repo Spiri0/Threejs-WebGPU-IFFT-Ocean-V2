@@ -109,26 +109,26 @@ class Main extends entity.Entity{
 
 	RAF() {
 
-        requestAnimationFrame((t) => {
+        	requestAnimationFrame((t) => {
     
-            if (this.previousRAF === null) {
-                this.previousRAF = t;
-            } else {
+            		if (this.previousRAF === null) {
+                		this.previousRAF = t;
+            		} else {
 				/*
 				const cameraDistance = this.camera_.position.length();
 				if(cameraDistance >= 5000){
 					this.MoveCameraToOrigin();
 				}
 				*/
-                const deltaTime = (t - this.previousRAF);
-                this.Step(deltaTime);
-                this.threejs_.Render();
-                this.previousRAF = t;
-            }
+                		const deltaTime = (t - this.previousRAF);
+                		this.Step(deltaTime);
+                		this.threejs_.Render();
+                		this.previousRAF = t;
+            		}
     
-            this.RAF();
-        });
-    }
+            		this.RAF();
+        	});
+	}
 
 
       
