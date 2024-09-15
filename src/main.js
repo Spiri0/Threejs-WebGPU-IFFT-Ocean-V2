@@ -106,33 +106,31 @@ class Main extends entity.Entity{
 		this.camera_.position.set(0, 0, 0);       
 	}
 
-	
 
 	RAF() {
 
-		const dstFPS = 40;
-		const fpsInterval = 1000 / dstFPS;
-		
-		requestAnimationFrame(() => {
-			const now = performance.now();
-			const elapsed = now - this.then;
-			
-			if(elapsed > fpsInterval) {
-
-				this.then = now - (elapsed % fpsInterval);
-				
+        requestAnimationFrame((t) => {
+    
+            if (this.previousRAF === null) {
+                this.previousRAF = t;
+            } else {
+				/*
 				const cameraDistance = this.camera_.position.length();
 				if(cameraDistance >= 5000){
 					this.MoveCameraToOrigin();
 				}
-                
-				this.Step(elapsed);
-				this.threejs_.Render();		
-			}
+				*/
+                const deltaTime = (t - this.previousRAF);
+                this.Step(deltaTime);
+                this.threejs_.Render();
+                this.previousRAF = t;
+            }
+    
+            this.RAF();
+        });
+    }
 
-			this.RAF();
-		});
-	}
+
       
       
 	Step(timeElapsed) { 
