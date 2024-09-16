@@ -78,20 +78,14 @@ export const fragmentStageWGSL = wgslFn(`
 
         //var skyColor = getSkyColor(reflect(normalOcean, viewDir)) * SKYCOLOR * 1.25;
 
-  
         var R = reflect(-viewDir, normalOcean);
 
         var halfVec = (normalize(-viewDir + normalOcean));
 
         R = halfVec;
-
-        //R = normalize(R);
-
         R = vec3<f32>(R.y, R.x, R.z);
+        R.z *= -1;
 
-      //  if(R.z == 1 || R.z == -1){
-            R.z *= -1;
-      //  }
 
         var texcoord = vec3<f32>(R.x, R.y, R.z);
 
@@ -115,11 +109,7 @@ export const fragmentStageWGSL = wgslFn(`
         
         oceanColor = mix(oceanColor, vec3<f32>(1), foam_mix_factor);
 
-
-        oceanColor = mix(oceanColor, SEACOLOR * 1 + SKYCOLOR * 0.2, smoothstep(1000, 5000, vViewDist));
-        if(vViewDist > 5000){
-            oceanColor = SEACOLOR * 1 + SKYCOLOR * 0.2;
-        }
+        oceanColor = mix(SEACOLOR, oceanColor, vCascadeScales.x);
 
 
 
