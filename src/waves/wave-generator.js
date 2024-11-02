@@ -52,8 +52,6 @@ export const wave_generator = (() => {
 					wave1Params[param] = wave_constants.FIRST_WAVE_DATASET[param].value;
 					this.waveSet1.add(wave1Params, param, paramBorders.min, paramBorders.max).onChange((value) => {
 						wave_constants.FIRST_WAVE_DATASET[param].value = value;
-						//this.InitCascades();
-						//this.UpdateOceanMaterial();
 
 						for(let i in this.cascades){
 							this.cascades[i].initialSpectrum.Update();
@@ -67,8 +65,6 @@ export const wave_generator = (() => {
 					wave2Params[param] = wave_constants.SECOND_WAVE_DATASET[param].value;
 					this.waveSet2.add(wave2Params, param, paramBorders.min, paramBorders.max).onChange((value) => {
 						wave_constants.SECOND_WAVE_DATASET[param].value = value;
-						//this.InitCascades();
-						//this.UpdateOceanMaterial();
 
 						for(let i in this.cascades){
 							this.cascades[i].initialSpectrum.Update();
@@ -78,18 +74,12 @@ export const wave_generator = (() => {
 			}
 			this.waveSet3.add(wave_constants.FOAM_STRENGTH, "value", 0, 5).step(0.1).onChange((value) => {
 				wave_constants.FOAM_STRENGTH.value = value;
-				//this.InitCascades();
-				//this.UpdateOceanMaterial();
 			});
 			this.waveSet3.add(wave_constants.FOAM_THRESHOLD, "value", 0, 5).step(0.1).onChange((value) => {
 				wave_constants.FOAM_THRESHOLD.value = value;
-				//this.InitCascades();
-				//this.UpdateOceanMaterial();
 			});
 			this.oceanSet.add(wave_constants.LOD_SCALE, "value", 0, 20).step(0.1).onChange((value) => {
 				wave_constants.LOD_SCALE.value = value;
-				//this.InitCascades();
-				//this.UpdateOceanMaterial();
 			});
 
 
@@ -137,23 +127,6 @@ export const wave_generator = (() => {
 			}
 		}
 
-/*
-		UpdateOceanMaterial() {
-			const ocean = this.FindEntity('ocean').GetComponent('OceanChunkManager');
-			ocean.material_.positionNode.parameters.displacement0.value = this.cascades[0].displacement;
-			ocean.material_.positionNode.parameters.displacement1.value = this.cascades[1].displacement;
-			ocean.material_.positionNode.parameters.displacement2.value = this.cascades[2].displacement;
-			ocean.material_.positionNode.parameters.displacement3.value = this.cascades[3].displacement;
-			ocean.material_.colorNode.parameters.derivatives0.value = this.cascades[0].derivative;
-			ocean.material_.colorNode.parameters.derivatives1.value = this.cascades[1].derivative;
-			ocean.material_.colorNode.parameters.derivatives2.value = this.cascades[2].derivative;
-			ocean.material_.colorNode.parameters.derivatives3.value = this.cascades[3].derivative;
-			ocean.material_.colorNode.parameters.jacobian0.value = this.cascades[0].jacobian;
-			ocean.material_.colorNode.parameters.jacobian1.value = this.cascades[1].jacobian;
-			ocean.material_.colorNode.parameters.jacobian2.value = this.cascades[2].jacobian;
-			ocean.material_.colorNode.parameters.jacobian3.value = this.cascades[3].jacobian;
-		}
-*/
 	}
 
 	return {
