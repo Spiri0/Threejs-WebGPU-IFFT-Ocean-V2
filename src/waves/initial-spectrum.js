@@ -65,14 +65,15 @@ export const initial_spectrum = (() => {
 		}
 
 
-		Update(_) {
-
+		Update() {
+			this.params_.renderer.compute(this.initialSpectrum, this.defaultWorkgroup);
+			this.params_.renderer.compute(this.initialSpectrumWithInverse, this.defaultWorkgroup);
 		}
 
 	}
 
 	return {
-		InitialSpectrum: InitialSpectrum,
+		InitialSpectrum,
 	};
   
 })();
