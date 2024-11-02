@@ -49,7 +49,7 @@ export const initial_spectrum = (() => {
 				boundaryHigh: uniform(params.boundaryHigh),
 				...params.waveSettings
 			}).compute(params.size ** 2);
-			params.renderer.compute(initialSpectrum, this.defaultWorkgroup);
+			params.renderer.compute(this.initialSpectrum, this.defaultWorkgroup);
 		}
         
 
@@ -61,7 +61,7 @@ export const initial_spectrum = (() => {
 				index: instanceIndex,
 				size: params.size,
 			}).compute(params.size ** 2);
-			params.renderer.compute(initialSpectrumWithInverse, this.defaultWorkgroup);
+			params.renderer.compute(this.initialSpectrumWithInverse, this.defaultWorkgroup);
 		}
 
 
