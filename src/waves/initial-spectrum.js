@@ -39,7 +39,7 @@ export const initial_spectrum = (() => {
  
 		InitialSpectrum(params){
 
-			const initialSpectrum = InitialSpectrumWGSL({ 
+			this.initialSpectrum = InitialSpectrumWGSL({ 
 				writeSpectrum: textureStore(this.spectrumTexture),
 				writeWaveData: textureStore(this.waveDataTexture),
 				index: instanceIndex,
@@ -55,7 +55,7 @@ export const initial_spectrum = (() => {
 
 		InitialSpectrumWithInverse(params){
 
-			const initialSpectrumWithInverse = InitialSpectrumWithInverseWGSL({ 
+			this.initialSpectrumWithInverse = InitialSpectrumWithInverseWGSL({ 
 				writeSpectrum: textureStore(this.h0k_Texture),
 				readSpectrum: texture(this.spectrumTexture),
 				index: instanceIndex,
