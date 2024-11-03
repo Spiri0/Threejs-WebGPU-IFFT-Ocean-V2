@@ -243,10 +243,10 @@ export const wave_cascade = (() => {
 			this.computeTimeSpectrum.computeNode.parameters.time.value = performance.now() / 1000;
 			this.params_.renderer.compute(this.computeTimeSpectrum, this.defaultWorkgroup);
 
-			this.IFFT({...this.params_, direction: "y"});
-			this.IFFT({...this.params_, direction: "x"});
-			this.IFFT({...this.params_, direction: "z"});
-			this.IFFT({...this.params_, direction: "w"});
+			this.IFFT({direction: "y"});
+			this.IFFT({direction: "x"});
+			this.IFFT({direction: "z"});
+			this.IFFT({direction: "w"});
 
 			this.computeMergeTextures.computeNode.parameters.deltaTime.value = dt;
 			this.params_.renderer.compute(this.computeMergeTextures, this.defaultWorkgroup);
@@ -257,31 +257,31 @@ export const wave_cascade = (() => {
 
 		IFFT(params){
 
-			if(params.direction == "x")params.renderer.compute(this.computeInitStorageTextureX, this.defaultWorkgroup);
-			if(params.direction == "y")params.renderer.compute(this.computeInitStorageTextureY, this.defaultWorkgroup);
-			if(params.direction == "z")params.renderer.compute(this.computeInitStorageTextureZ, this.defaultWorkgroup);
-			if(params.direction == "w")params.renderer.compute(this.computeInitStorageTextureW, this.defaultWorkgroup);
+			if(params.direction == "x") this.params_.renderer.compute(this.computeInitStorageTextureX, this.defaultWorkgroup);
+			if(params.direction == "y") this.params_.renderer.compute(this.computeInitStorageTextureY, this.defaultWorkgroup);
+			if(params.direction == "z") this.params_.renderer.compute(this.computeInitStorageTextureZ, this.defaultWorkgroup);
+			if(params.direction == "w") this.params_.renderer.compute(this.computeInitStorageTextureW, this.defaultWorkgroup);
 
-			let iterations = Math.log2(params.size);
+			let iterations = Math.log2( this.params_.size );
 			let pingpong = false;
 
 			for(let i = 0; i < iterations; i++){
 				pingpong = !pingpong;
 
 				this.ifftStep.value = i;
-				params.renderer.compute(pingpong ? this.computeHorizontalPing : this.computeHorizontalPong, this.defaultWorkgroup);
+				 this.params_.renderer.compute(pingpong ? this.computeHorizontalPing : this.computeHorizontalPong, this.defaultWorkgroup);
 			}
 			for(let i = 0; i < iterations; i++){
 				pingpong = !pingpong;
 
 				this.ifftStep.value = i;
-				params.renderer.compute(pingpong ? this.computeVerticalPing : this.computeVerticalPong, this.defaultWorkgroup);
+				 this.params_.renderer.compute(pingpong ? this.computeVerticalPing : this.computeVerticalPong, this.defaultWorkgroup);
 			}
  
-			if(params.direction == "x")params.renderer.compute(this.computePermuteX, this.defaultWorkgroup);       
-			if(params.direction == "y")params.renderer.compute(this.computePermuteY, this.defaultWorkgroup);
-			if(params.direction == "z")params.renderer.compute(this.computePermuteZ, this.defaultWorkgroup);
-			if(params.direction == "w")params.renderer.compute(this.computePermuteW, this.defaultWorkgroup);
+			if(params.direction == "x") this.params_.renderer.compute(this.computePermuteX, this.defaultWorkgroup);       
+			if(params.direction == "y") this.params_.renderer.compute(this.computePermuteY, this.defaultWorkgroup);
+			if(params.direction == "z") this.params_.renderer.compute(this.computePermuteZ, this.defaultWorkgroup);
+			if(params.direction == "w") this.params_.renderer.compute(this.computePermuteW, this.defaultWorkgroup);
 		}
 
 	}
