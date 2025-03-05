@@ -19,10 +19,10 @@ Important: In order for the live server to work here on github, I had to deactiv
 
 I use a much more efficient and advanced techniques to create limitless landscapes. But this repo is pretty good to get into the topic of procedural geometry
 
-<img src="https://github.com/user-attachments/assets/795292f1-2da2-47dc-aa9e-0ca704c77f2d" width="500" />
-<img src="https://github.com/user-attachments/assets/3b18ffde-3c6e-4e5a-ba33-de9989a46925" width="500" />
-<img src="https://github.com/user-attachments/assets/32781cca-e688-4de1-ad2e-48a0f630b9ec" width="500" />
-<img src="https://github.com/user-attachments/assets/6e9f6bfb-479b-40b2-8d51-29118167a93a" width="500" />
+<img src="https://github.com/user-attachments/assets/795292f1-2da2-47dc-aa9e-0ca704c77f2d" width="400" />
+<img src="https://github.com/user-attachments/assets/3b18ffde-3c6e-4e5a-ba33-de9989a46925" width="400" />
+<img src="https://github.com/user-attachments/assets/32781cca-e688-4de1-ad2e-48a0f630b9ec" width="400" />
+<img src="https://github.com/user-attachments/assets/6e9f6bfb-479b-40b2-8d51-29118167a93a" width="400" />
 
 
 
