@@ -9,7 +9,7 @@ Threejs-WebGPU-IFFT-Ocean-V2 r174
 This is a physically real ocean simulation using the jonswap ocean model and inverse fast fourier transformation.
 In src/ocean/ocean_constants.js you can use QT_OCEAN_MIN_CELL_RESOLUTION to have a higher resolution of the wireframe (even numbers only!).
 
-Important: In order for the live server to work here on github, I had to deactivate the SharedArrayBuffers in the ocean worker and use ArrayBuffers for it. I also had to deactivate the coi-serviceworker in the index.html. The coi-serviceworker is important for the SharedArrayBuffers. So if you download the repo I recommend using the SharedArrayBuffers and the coi-serviceworker. This is significantly more efficient.
+Important: In order for the live server to work here on github, I had to deactivate the SharedArrayBuffers in the ocean worker and use ArrayBuffers for it. So if you download the repo I recommend using the SharedArrayBuffers. This is significantly more efficient.
 
 
 
