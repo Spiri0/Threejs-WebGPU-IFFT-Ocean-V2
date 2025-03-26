@@ -3,15 +3,11 @@ See it running live [here](https://spiri0.github.io/Threejs-WebGPU-IFFT-Ocean-V2
 ![ocean_social](https://github.com/user-attachments/assets/31a04239-c9e2-4e16-ac56-af78e51e4560)
 
 
-Threejs-WebGPU-IFFT-Ocean-V2 r168
-This is a physically real ocean simulation using the jonswap ocean model and inverse fast fourier transformation. The resolution seen here in the live server is quite low with an ifft texture resolution of 128 in favor of the computing power.
+March 26, 2025: I've switched the IFFT system from storage textures to storage buffers. This saves a lot of compute steps and allows for the use of larger cascade textures. Now 3x512 instead of the previous 4x256. The performance has improved significantly.
 
-If you have a powerful graphics card you can set the TEXTURE_SIZE in src/waves/wave_constants.js from 128 to 256 or 512. This makes a very big difference in the details.
+Threejs-WebGPU-IFFT-Ocean-V2 r174
+This is a physically real ocean simulation using the jonswap ocean model and inverse fast fourier transformation.
 In src/ocean/ocean_constants.js you can use QT_OCEAN_MIN_CELL_RESOLUTION to have a higher resolution of the wireframe (even numbers only!).
-
-Since the mipmaps are exhausted very quickly depending on the viewing angle, the ocean currently turns into a monotone blue over the distance. Here I imagine an FBM Ocean for the distance.
-The wireframe button was defective. I fixed that so you can see the morphing wireframe again. 
-Depth textures are now working, but I'm currently very busy with my other project and therefore I don't have the time to implement the scattering for transparent water at the moment.
 
 Important: In order for the live server to work here on github, I had to deactivate the SharedArrayBuffers in the ocean worker and use ArrayBuffers for it. I also had to deactivate the coi-serviceworker in the index.html. The coi-serviceworker is important for the SharedArrayBuffers. So if you download the repo I recommend using the SharedArrayBuffers and the coi-serviceworker. This is significantly more efficient.
 
