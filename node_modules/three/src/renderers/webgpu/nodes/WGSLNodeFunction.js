@@ -58,6 +58,7 @@ const wgslTypeLib = {
 	'texture_multisampled_2d': 'cubeTexture',
 
 	'texture_depth_2d': 'depthTexture',
+	'texture_depth_multisampled_2d': 'depthTexture',
 
 	'texture_3d': 'texture3D',
 
@@ -97,13 +98,21 @@ const parse = ( source ) => {
 
 			let resolvedType = type;
 
-			if ( resolvedType.startsWith( 'texture' ) ) {
+			if ( resolvedType.startsWith( 'ptr' ) ) {
 
-				resolvedType = type.split( '<' )[ 0 ];
+				resolvedType = 'pointer';
+
+			} else {
+
+				if ( resolvedType.startsWith( 'texture' ) ) {
+
+					resolvedType = type.split( '<' )[ 0 ];
+
+				}
+
+				resolvedType = wgslTypeLib[ resolvedType ];
 
 			}
-
-			resolvedType = wgslTypeLib[ resolvedType ] || resolvedType;
 
 			inputs.push( new NodeFunctionInput( resolvedType, name ) );
 
@@ -132,8 +141,18 @@ const parse = ( source ) => {
 
 };
 
+/**
+ * This class represents a WSL node function.
+ *
+ * @augments NodeFunction
+ */
 class WGSLNodeFunction extends NodeFunction {
 
+	/**
+	 * Constructs a new WGSL node function.
+	 *
+	 * @param {string} source - The WGSL source.
+	 */
 	constructor( source ) {
 
 		const { type, inputs, name, inputsCode, blockCode, outputType } = parse( source );
@@ -146,6 +165,12 @@ class WGSLNodeFunction extends NodeFunction {
 
 	}
 
+	/**
+	 * This method returns the WGSL code of the node function.
+	 *
+	 * @param {string} [name=this.name] - The function's name.
+	 * @return {string} The shader code.
+	 */
 	getCode( name = this.name ) {
 
 		const outputType = this.outputType !== 'void' ? '-> ' + this.outputType : '';

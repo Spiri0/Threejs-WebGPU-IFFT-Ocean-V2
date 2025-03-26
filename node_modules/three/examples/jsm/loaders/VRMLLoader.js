@@ -5,6 +5,7 @@ import {
 	BufferGeometry,
 	ClampToEdgeWrapping,
 	Color,
+	ColorManagement,
 	ConeGeometry,
 	CylinderGeometry,
 	DataTexture,
@@ -249,7 +250,7 @@ class VRMLLoader extends Loader {
 
 		function createVisitor( BaseVRMLVisitor ) {
 
-			// the visitor is created dynmaically based on the given base class
+			// the visitor is created dynamically based on the given base class
 
 			class VRMLToASTVisitor extends BaseVRMLVisitor {
 
@@ -918,8 +919,7 @@ class VRMLLoader extends Loader {
 
 				} else {
 
-					skyMaterial.color.setRGB( skyColor[ 0 ], skyColor[ 1 ], skyColor[ 2 ] );
-					skyMaterial.color.convertSRGBToLinear();
+					skyMaterial.color.setRGB( skyColor[ 0 ], skyColor[ 1 ], skyColor[ 2 ], SRGBColorSpace );
 
 				}
 
@@ -1240,13 +1240,11 @@ class VRMLLoader extends Loader {
 						break;
 
 					case 'diffuseColor':
-						materialData.diffuseColor = new Color( fieldValues[ 0 ], fieldValues[ 1 ], fieldValues[ 2 ] );
-						materialData.diffuseColor.convertSRGBToLinear();
+						materialData.diffuseColor = new Color().setRGB( fieldValues[ 0 ], fieldValues[ 1 ], fieldValues[ 2 ], SRGBColorSpace );
 						break;
 
 					case 'emissiveColor':
-						materialData.emissiveColor = new Color( fieldValues[ 0 ], fieldValues[ 1 ], fieldValues[ 2 ] );
-						materialData.emissiveColor.convertSRGBToLinear();
+						materialData.emissiveColor = new Color().setRGB( fieldValues[ 0 ], fieldValues[ 1 ], fieldValues[ 2 ], SRGBColorSpace );
 						break;
 
 					case 'shininess':
@@ -1254,8 +1252,7 @@ class VRMLLoader extends Loader {
 						break;
 
 					case 'specularColor':
-						materialData.specularColor = new Color( fieldValues[ 0 ], fieldValues[ 1 ], fieldValues[ 2 ] );
-						materialData.specularColor.convertSRGBToLinear();
+						materialData.specularColor = new Color().setRGB( fieldValues[ 0 ], fieldValues[ 1 ], fieldValues[ 2 ], SRGBColorSpace );
 						break;
 
 					case 'transparency':
@@ -1893,7 +1890,7 @@ class VRMLLoader extends Loader {
 
 						// if the colorIndex field is not empty, then one color is used for each polyline of the IndexedLineSet.
 
-						const expandedColorIndex = expandLineIndex( colorIndex ); // compute colors for each line segment (rendering primitve)
+						const expandedColorIndex = expandLineIndex( colorIndex ); // compute colors for each line segment (rendering primitive)
 						colorAttribute = computeAttributeFromIndexedData( expandedLineIndex, expandedColorIndex, color, 3 ); // compute data on vertex level
 
 					} else {
@@ -1910,8 +1907,8 @@ class VRMLLoader extends Loader {
 
 						// if the colorIndex field is not empty, then colors are applied to each vertex of the IndexedLineSet
 
-						const flattenLineColors = flattenData( color, colorIndex ); // compute colors for each VRML primitve
-						const expandedLineColors = expandLineData( flattenLineColors, coordIndex ); // compute colors for each line segment (rendering primitve)
+						const flattenLineColors = flattenData( color, colorIndex ); // compute colors for each VRML primitive
+						const expandedLineColors = expandLineData( flattenLineColors, coordIndex ); // compute colors for each line segment (rendering primitive)
 						colorAttribute = computeAttributeFromLineData( expandedLineIndex, expandedLineColors ); // compute data on vertex level
 
 
@@ -1919,7 +1916,7 @@ class VRMLLoader extends Loader {
 
 						// if the colorIndex field is empty, then the coordIndex field is used to choose colors from the Color node
 
-						const expandedLineColors = expandLineData( color, coordIndex ); // compute colors for each line segment (rendering primitve)
+						const expandedLineColors = expandLineData( color, coordIndex ); // compute colors for each line segment (rendering primitive)
 						colorAttribute = computeAttributeFromLineData( expandedLineIndex, expandedLineColors ); // compute data on vertex level
 
 					}
@@ -2751,7 +2748,7 @@ class VRMLLoader extends Loader {
 
 			const indices = [];
 
-			// since face defintions can have more than three vertices, it's necessary to
+			// since face definitions can have more than three vertices, it's necessary to
 			// perform a simple triangulation
 
 			let start = 0;
@@ -3111,7 +3108,8 @@ class VRMLLoader extends Loader {
 			for ( let i = 0; i < attribute.count; i ++ ) {
 
 				color.fromBufferAttribute( attribute, i );
-				color.convertSRGBToLinear();
+
+				ColorManagement.toWorkingColorSpace( color, SRGBColorSpace );
 
 				attribute.setXYZ( i, color.r, color.g, color.b );
 
@@ -3125,7 +3123,7 @@ class VRMLLoader extends Loader {
 		 * node, but could be applied to other nodes with multiple faces as well.
 		 *
 		 * When used with the Background node, default is directionIsDown is true if
-		 * interpolating the skyColor down from the Zenith. When interpolationg up from
+		 * interpolating the skyColor down from the Zenith. When interpolating up from
 		 * the Nadir i.e. interpolating the groundColor, the directionIsDown is false.
 		 *
 		 * The first angle is never specified, it is the Zenith (0 rad). Angles are specified
@@ -3216,7 +3214,9 @@ class VRMLLoader extends Loader {
 				const colorA = colors[ thresholdIndexA ];
 				const colorB = colors[ thresholdIndexB ];
 
-				color.copy( colorA ).lerp( colorB, t ).convertSRGBToLinear();
+				color.copy( colorA ).lerp( colorB, t );
+
+				ColorManagement.toWorkingColorSpace( color, SRGBColorSpace );
 
 				colorAttribute.setXYZ( index, color.r, color.g, color.b );
 

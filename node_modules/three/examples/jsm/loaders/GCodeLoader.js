@@ -14,11 +14,13 @@ import {
  * Gcode files are composed by commands used by machines to create objects.
  *
  * @class GCodeLoader
- * @param {Manager} manager Loading manager.
  */
 
 class GCodeLoader extends Loader {
 
+	/**
+	 * @param {Manager} manager Loading manager.
+	 */
 	constructor( manager ) {
 
 		super( manager );
@@ -123,7 +125,7 @@ class GCodeLoader extends Loader {
 			const tokens = lines[ i ].split( ' ' );
 			const cmd = tokens[ 0 ].toUpperCase();
 
-			//Argumments
+			//Arguments
 			const args = {};
 			tokens.splice( 1 ).forEach( function ( token ) {
 

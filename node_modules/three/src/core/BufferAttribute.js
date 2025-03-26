@@ -3,10 +3,11 @@ import { Vector2 } from '../math/Vector2.js';
 import { denormalize, normalize } from '../math/MathUtils.js';
 import { StaticDrawUsage, FloatType } from '../constants.js';
 import { fromHalfFloat, toHalfFloat } from '../extras/DataUtils.js';
-import { warnOnce } from '../utils.js';
 
 const _vector = /*@__PURE__*/ new Vector3();
 const _vector2 = /*@__PURE__*/ new Vector2();
+
+let _id = 0;
 
 class BufferAttribute {
 
@@ -20,6 +21,8 @@ class BufferAttribute {
 
 		this.isBufferAttribute = true;
 
+		Object.defineProperty( this, 'id', { value: _id ++ } );
+
 		this.name = '';
 
 		this.array = array;
@@ -28,7 +31,6 @@ class BufferAttribute {
 		this.normalized = normalized;
 
 		this.usage = StaticDrawUsage;
-		this._updateRange = { offset: 0, count: - 1 };
 		this.updateRanges = [];
 		this.gpuType = FloatType;
 
@@ -41,13 +43,6 @@ class BufferAttribute {
 	set needsUpdate( value ) {
 
 		if ( value === true ) this.version ++;
-
-	}
-
-	get updateRange() {
-
-		warnOnce( 'THREE.BufferAttribute: updateRange() is deprecated and will be removed in r169. Use addUpdateRange() instead.' ); // @deprecated, r159
-		return this._updateRange;
 
 	}
 

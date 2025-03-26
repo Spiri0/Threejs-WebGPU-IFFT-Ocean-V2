@@ -4,45 +4,42 @@ import {wgslFn} from "three/tsl";
 export const butterflyWGSL = wgslFn(`
 
     fn computeWGSL( 
-        writeButterfly: texture_storage_2d<rgba32float, write>,
+        butterflyBuffer: ptr<storage, array<vec4<f32>>, read_write>,
         index: u32, 
         N: f32,
     ) -> void {
 
-        var posX = f32(index) % log2(N);
-        var posY = floor(f32(index) / log2(N));
-        var idx = vec2u(u32(posX), u32(posY));
+        var logN = log2(N);
+        var posX = f32(index) % logN;
+        var posY = floor(f32(index) / logN);
 
         const PI: f32 = 3.1415926;
 
         var k: f32 = (posY * N/pow(2, posX + 1)) % N;
         var twiddle: vec2<f32> = vec2<f32>(cos(2 * PI * k / N), sin(2 * PI * k / N));
-        var butterflyspan: f32 = pow(2, f32(posX));
-        var butterflywing: u32 = 0;
 
-        if(posY % pow(2, posX + 1) < pow(2, posX)){
-            butterflywing = 1;
-        }
-        else{
-            butterflywing = 0;
-        }
+        var butterflyspan = pow(2, f32(posX));
+        let idx = u32(posY) * u32(logN) + u32(posX);
+        var butterflywing: i32 = select(0, 1, posY % pow(2, posX + 1) < pow(2, posX));
+        var uY = u32(posY);
 
         if(u32(posX) == 0){
             if(butterflywing == 1){
-                textureStore(writeButterfly, idx, vec4f(twiddle.x, twiddle.y, reverseBits(idx.y, N), reverseBits(idx.y + 1, N)));
+                butterflyBuffer[idx] = vec4f( twiddle, reverseBits(uY, N), reverseBits(uY + 1, N) );
             }
             else{
-                textureStore(writeButterfly, idx, vec4f(twiddle.x, twiddle.y, reverseBits(idx.y - 1, N), reverseBits(idx.y, N)));
+                butterflyBuffer[idx] = vec4f( twiddle, reverseBits(uY - 1, N), reverseBits(uY, N) );
             }
         }
         else{
             if(butterflywing == 1){
-                textureStore(writeButterfly, idx, vec4f(twiddle.x, twiddle.y, posY, posY + butterflyspan));
+                butterflyBuffer[idx] = vec4f( twiddle, posY, posY + butterflyspan);
             }
             else{
-                textureStore(writeButterfly, idx, vec4f(twiddle.x, twiddle.y, posY - butterflyspan, posY));
+                butterflyBuffer[idx] = vec4f( twiddle, posY - butterflyspan, posY);
             }
         }
+
     }
 
     fn reverseBits(index: u32, N: f32) -> f32 {

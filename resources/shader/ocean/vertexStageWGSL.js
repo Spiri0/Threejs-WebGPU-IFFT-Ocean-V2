@@ -6,12 +6,10 @@ export const vertexStageWGSL = (() => {
     //varyings
     const vDisplacedPosition = varyingProperty("vec3", "vDisplacedPosition");
     const vMorphedPosition = varyingProperty("vec3", "vMorphedPosition");
-    const vCascadeScales = varyingProperty("vec4", "vCascadeScales");
+    const vCascadeScales = varyingProperty("vec3", "vCascadeScales");
     const vTexelCoord0 = varyingProperty("vec2", "vTexelCoord0");
     const vTexelCoord1 = varyingProperty("vec2", "vTexelCoord1");
     const vTexelCoord2 = varyingProperty("vec2", "vTexelCoord2");
-    const vTexelCoord3 = varyingProperty("vec2", "vTexelCoord3");
-
 
 
     const vertexStageWGSL = wgslFn(`
@@ -20,7 +18,6 @@ export const vertexStageWGSL = (() => {
         displacement0: texture_2d<f32>,
         displacement1: texture_2d<f32>,
         displacement2: texture_2d<f32>,
-        displacement3: texture_2d<f32>,
         noise: texture_2d<f32>,
         cameraPosition: vec3<f32>,
         time: f32,
@@ -30,7 +27,7 @@ export const vertexStageWGSL = (() => {
         gridResolution: f32,
         lod: f32,
         width: f32,
-        waveLengths: vec4<f32>,
+        waveLengths: vec3<f32>,
         ifftResolution: f32,
         lodScale: f32
     ) -> vec4<f32> {
@@ -47,29 +44,27 @@ export const vertexStageWGSL = (() => {
         var lod0 = min(lodScale * waveLengths.x / viewDist, 1.0);
         var lod1 = min(lodScale * waveLengths.y / viewDist, 1.0);
         var lod2 = min(lodScale * waveLengths.z / viewDist, 1.0);
-        var lod3 = min(lodScale * waveLengths.w / viewDist, 1.0);
 
         var vtexelCoord0: vec2<f32> = ifftResolution * morphedPosition.xz/waveLengths.x;
         var vtexelCoord1: vec2<f32> = ifftResolution * morphedPosition.xz/waveLengths.y;
         var vtexelCoord2: vec2<f32> = ifftResolution * morphedPosition.xz/waveLengths.z;
-        var vtexelCoord3: vec2<f32> = ifftResolution * morphedPosition.xz/waveLengths.w;
 
         var displacement_0: vec4<f32> = InterpolateBilinear(displacement0, vtexelCoord0, ifftResolution) * lod0;
         var displacement_1: vec4<f32> = InterpolateBilinear(displacement1, vtexelCoord1, ifftResolution) * lod1;
         var displacement_2: vec4<f32> = InterpolateBilinear(displacement2, vtexelCoord2, ifftResolution) * lod2;
-        var displacement_3: vec4<f32> = InterpolateBilinear(displacement3, vtexelCoord3, ifftResolution) * lod3;
-
-
-        var displacedPosition: vec3<f32> = morphedPosition + (displacement_0.rgb + displacement_1.rgb + displacement_2.rgb + displacement_3.rgb);
 
         
-        varyings.vCascadeScales = vec4<f32>(lod0, lod1, lod2, lod3);
+
+
+        var displacedPosition: vec3<f32> = morphedPosition + ( displacement_0.rgb + displacement_1.rgb + displacement_2.rgb );
+
+        
+        varyings.vCascadeScales = vec3<f32>(lod0, lod1, lod2 );
         varyings.vDisplacedPosition = displacedPosition;
         varyings.vMorphedPosition = morphedPosition;
         varyings.vTexelCoord0 = vtexelCoord0;
         varyings.vTexelCoord1 = vtexelCoord1;
         varyings.vTexelCoord2 = vtexelCoord2;
-        varyings.vTexelCoord3 = vtexelCoord3;
         
         return vec4<f32>(displacedPosition, 1.0);
     }
@@ -171,7 +166,7 @@ export const vertexStageWGSL = (() => {
     }
 
 
-`, [vDisplacedPosition, vMorphedPosition, vCascadeScales, vTexelCoord0, vTexelCoord1, vTexelCoord2, vTexelCoord3]);
+`, [ vDisplacedPosition, vMorphedPosition, vCascadeScales, vTexelCoord0, vTexelCoord1, vTexelCoord2 ]);
 
 
 
@@ -183,8 +178,7 @@ export const vertexStageWGSL = (() => {
         vCascadeScales,
         vTexelCoord0,
         vTexelCoord1,
-        vTexelCoord2,
-        vTexelCoord3
+        vTexelCoord2
     }
 
 

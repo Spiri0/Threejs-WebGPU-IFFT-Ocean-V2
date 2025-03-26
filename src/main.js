@@ -1,142 +1,142 @@
 import {THREE, GUI} from './three-defs.js';
 import {entity} from './entity.js';
 import {entity_manager} from './entity-manager.js';
-import {threejs_component} from './threejs-component.js';
-import { BasicController } from './basic-controller.js';
-import {ocean} from './ocean/ocean.js';
+import ThreeJSController from './threejs-component.js';
+import OceanChunkManager from './ocean/ocean.js';
 import {wave_generator} from './waves/wave-generator.js';
-
-
+import {spawners} from './spawners.js';
 
 
 class Main extends entity.Entity{
+
+	static isInitialized = false;
+
 	constructor(){
 		super();
 	}
 
 	async Initialize() {
-		this.entityManager_ = new entity_manager.EntityManager();
-		this.entityManager_.Add(this, 'main');
+
+		if ( Main.isInitialized ) {
+			console.log("App is already initialized");
+			return;
+		}
+
+		this.entityManager = new entity_manager.EntityManager();
+		this.entityManager.Add(this, 'main');
 		this.OnGameStarted();
+
+		Main.isInitialized = true;
+
 	}
 
 	async OnGameStarted() {
+
 		this.CreateGUI();
-		this.clock_ = new THREE.Clock();
-		this.then = performance.now();
 		await this.LoadControllers();
-		this.previousRAF = null;
-		this.RAF();
+
+		if ( !this.running ) {
+
+			this.running = true;
+			this.previousTime = 0;
+
+			this.renderer.setAnimationLoop( this.Animate.bind( this ) );
+		}
 	}
 
 	CreateGUI() {
 		this.guiParams = {};
-		this.gui_ = new GUI();
-		this.gui_.close();
+		this.gui = new GUI();
+		this.gui.close();
 	}
 
 	async LoadControllers() {
 		
 		const threejs = new entity.Entity();
-		threejs.AddComponent(new threejs_component.ThreeJSController());
-		this.entityManager_.Add(threejs, 'threejs');
+		threejs.AddComponent(new ThreeJSController());
+		this.entityManager.Add(threejs, 'threejs');
 		
+		this.scene = threejs.GetComponent('ThreeJSController').scene;
+		this.camera = threejs.GetComponent('ThreeJSController').camera;
+		this.renderer = threejs.GetComponent('ThreeJSController').renderer;
+		this.threejs = threejs.GetComponent('ThreeJSController');
 		
-		this.scene_ = threejs.GetComponent('ThreeJSController').scene;
-		this.camera_ = threejs.GetComponent('ThreeJSController').camera;
-		this.renderer_ = threejs.GetComponent('ThreeJSController').renderer;
-		this.threejs_ = threejs.GetComponent('ThreeJSController');
+		await this.renderer.init();
 		
-
-		await this.renderer_.init();
-
 
 		const basicParams = {
-			scene: this.scene_,
-			camera: this.camera_,
-			threejs: this.threejs_,
-			renderer: this.renderer_
+			scene: this.scene,
+			camera: this.camera,
+			threejs: this.threejs,
+			renderer: this.renderer
 		};
 		
-		this.camera_.position.set(0, 6, 0);
-		this.camera_.rotation.x = -0.1 * Math.PI;
-		this.scene_.position.set(0, 0, 0);
-		this.player = new BasicController(basicParams);
-		
+
+		const spawner = new entity.Entity();
+
+		//Player
+		spawner.AddComponent( new spawners.PlayerSpawner( {
+			...basicParams,
+			layer: 0,
+		} ) );
+
+		this.entityManager.Add( spawner, 'spawners' );
+		spawner.GetComponent( 'PlayerSpawner' ).Spawn();
+
+
 		
 		//------------------------------IFFT-Wave-Generator---------------------------------
-		
-		const WaveGenerator_ = new entity.Entity();
-		WaveGenerator_.AddComponent(
-			new wave_generator.WaveGenerator({
-				...basicParams,
-				clock: this.clock_,
-				gui: this.gui_,
-			})
-		);
-		this.entityManager_.Add(WaveGenerator_, 'waveGenerator');
-		
+
+		const waves = new entity.Entity();
+		this.waveGenerator = new wave_generator.WaveGenerator();
+		await this.waveGenerator.Init( {
+			...basicParams,
+			gui: this.gui,
+	 	} );
+		waves.AddComponent( this.waveGenerator );
+		this.entityManager.Add(waves, 'waveGenerator');
+
 		//----------------------------Multithreading-CDLOD-Ocean----------------------------
-		
-		this.ocean_ = new entity.Entity();
-		this.ocean_.AddComponent(
-			new ocean.OceanChunkManager({
-				...basicParams,
-				sunpos: new THREE.Vector3(100000, 0, 100000), // not in use at moment, hardcoded in the shader
-				clock: this.clock_,
-				waveGenerator: WaveGenerator_.components_.WaveGenerator, 
-				layer: 0,
-				depthTexture: this.threejs_.depthTexture,
-				gui: this.gui_,
-				guiParams: this.guiParams,
-				mySampler: this.mySampler
-			})
-		);
-		this.entityManager_.Add(this.ocean_, 'ocean');
-		
+
+		const ocean = new entity.Entity();
+		this.oceanGeometry = new OceanChunkManager();
+		await this.oceanGeometry.Init( {
+			...basicParams,
+			sunpos: new THREE.Vector3(100000, 0, 100000), // not in use at moment, hardcoded in the shader
+			waveGenerator: waves.components_.WaveGenerator,
+			layer: 0,
+			gui: this.gui,
+			guiParams: this.guiParams,
+			mySampler: this.mySampler,
+		} );
+		ocean.AddComponent( this.oceanGeometry );
+		this.entityManager.Add( ocean, 'ocean' );
 		
 		//----------------------------------------------------------------------------------
 	}
 
+	async Animate() {
 
+		this.camera.layers.enableAll();
 
-	MoveCameraToOrigin(){
-		const currentCameraPosition = this.camera_.position.clone();
-		this.scene_.position.sub(currentCameraPosition);
-		this.camera_.position.set(0, 0, 0);       
+		const now = performance.now();
+		const deltaTime = ( now - this.previousTime );
+		this.previousTime = now;
+	
+		await this.waveGenerator.Update_( deltaTime );
+		this.oceanGeometry.Update_( deltaTime );
+
+		this.Step( deltaTime );
+		this.renderer.render( this.scene, this.camera );
+		
+	//	console.log(deltaTime)
+
 	}
 
 
-	RAF() {
-
-        	requestAnimationFrame((t) => {
-    
-            		if (this.previousRAF === null) {
-                		this.previousRAF = t;
-            		} else {
-				/*
-				const cameraDistance = this.camera_.position.length();
-				if(cameraDistance >= 5000){
-				this.MoveCameraToOrigin();
-				}
-				*/
-                		const deltaTime = (t - this.previousRAF);
-                		this.Step(deltaTime);
-                		this.threejs_.Render();
-                		this.previousRAF = t;
-            		}
-    
-            		this.RAF();
-        	});
-	}
-
-
-      
-      
 	Step(timeElapsed) { 
 		const timeElapsedS = timeElapsed / 1000;
-		this.player.Update(1 / 50);//hack, just a fast implementation
-		this.entityManager_.Update(timeElapsedS, 0);
+		this.entityManager.Update( timeElapsedS, 0 );
 	}
 
 }

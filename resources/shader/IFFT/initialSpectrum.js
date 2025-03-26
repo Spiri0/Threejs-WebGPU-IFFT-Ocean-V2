@@ -4,10 +4,10 @@ import {wgslFn} from "three/tsl";
 export const InitialSpectrumWGSL = wgslFn(`
 
     fn computeWGSL( 
-        writeSpectrum: texture_storage_2d<rgba32float, write>,
-        writeWaveData: texture_storage_2d<rgba32float, write>,
+        spectrumBuffer: ptr<storage, array<vec4<f32>>, read_write>,
+		waveDataBuffer: ptr<storage, array<vec4<f32>>, read_write>,
         index: u32,
-        size: f32,
+        size: u32,
         waveLength: f32,
         boundaryLow: f32,
         boundaryHigh: f32,
@@ -33,14 +33,15 @@ export const InitialSpectrumWGSL = wgslFn(`
         d_fadeLimit: f32,
     ) -> void {
 
-        var posX = index % u32(size);
-        var posY = index / u32(size);
+        var posX = index % size;
+        var posY = index / size;
         var idx = vec2u(posX, posY);
 	
+
         var xy = vec2<f32>(f32(posX), f32(posY));
         let deltaK = 2.0 * PI / waveLength;
-        let nx = f32(posX) - size / 2.0;
-        let nz = f32(posY) - size / 2.0;
+        let nx = f32(posX) - f32(size) / 2.0;
+        let nz = f32(posY) - f32(size) / 2.0;
         let k = vec2<f32>(nx, nz) * deltaK;
         let kLength = length(k);
 
@@ -67,13 +68,13 @@ export const InitialSpectrumWGSL = wgslFn(`
             var er: f32 = gaussianRandom1(xy);
             var ei: f32 = gaussianRandom2(xy);
 
-            textureStore(writeWaveData, idx, vec4f(k.x, 1.0/kLength, k.y, w));
-            textureStore(writeSpectrum, idx, vec4f(vec2<f32>(er, ei) * sqrt(2 * spectrum * abs(dOmegadk)/kLength*deltaK*deltaK), 0, 0));
-        }
-        else{
-            textureStore(writeWaveData, idx, vec4f(k.x, 1, k.y, 0));
-            textureStore(writeSpectrum, idx, vec4f(0));
-        }
+            spectrumBuffer[ index ] = vec4<f32>( vec2<f32>( er, ei ) * sqrt(2 * spectrum * abs(dOmegadk)/kLength*deltaK*deltaK ), 0, 0 );
+		    waveDataBuffer[ index ] = vec4<f32>( k.x, 1.0 / kLength, k.y, w );
+	    } else {
+            spectrumBuffer[ index ] = vec4<f32>(0.0);
+		    waveDataBuffer[ index ] = vec4<f32>( k.x, 1.0, k.y, 0.0 );
+	    }
+
     }
 
     const PI: f32 = 3.141592653589793;
@@ -163,9 +164,22 @@ export const InitialSpectrumWGSL = wgslFn(`
             * pow(abs(gamma), a);
     }
 
+
+
+    //----------------------------
+
+
+
+
+
+
+    //----------------------------
+
+
+
     fn shortWavesFade(kLength: f32, shortWavesFade: f32, fadeLimit: f32) -> f32
     {
         return (1 - fadeLimit) * exp(-pow(shortWavesFade * kLength, 2)) + fadeLimit;
     }
-      
+
 `);

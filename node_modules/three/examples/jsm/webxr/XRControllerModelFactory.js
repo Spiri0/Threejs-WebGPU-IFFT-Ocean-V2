@@ -54,6 +54,8 @@ class XRControllerModel extends Object3D {
 	/**
 	 * Polls data from the XRInputSource and updates the model's components to match
 	 * the real world data
+	 *
+	 * @param {boolean} force
 	 */
 	updateMatrixWorld( force ) {
 
@@ -107,8 +109,11 @@ class XRControllerModel extends Object3D {
 
 /**
  * Walks the model's tree to find the nodes needed to animate the components and
- * saves them to the motionContoller components for use in the frame loop. When
+ * saves them to the motionController components for use in the frame loop. When
  * touchpads are found, attaches a touch dot to them.
+ *
+ * @param {MotionController} motionController
+ * @param {Object3D} scene
  */
 function findNodes( motionController, scene ) {
 
@@ -239,7 +244,7 @@ class XRControllerModelFactory {
 
 			const xrInputSource = event.data;
 
-			if ( xrInputSource.targetRayMode !== 'tracked-pointer' || ! xrInputSource.gamepad ) return;
+			if ( xrInputSource.targetRayMode !== 'tracked-pointer' || ! xrInputSource.gamepad || xrInputSource.hand ) return;
 
 			fetchProfile( xrInputSource, this.path, DEFAULT_PROFILE ).then( ( { profile, assetPath } ) => {
 

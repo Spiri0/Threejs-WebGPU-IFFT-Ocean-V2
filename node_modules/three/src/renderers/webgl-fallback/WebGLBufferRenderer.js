@@ -26,7 +26,7 @@ class WebGLBufferRenderer {
 
 		}
 
-		info.update( object, count, mode, 1 );
+		info.update( object, count, 1 );
 
 	}
 
@@ -46,7 +46,7 @@ class WebGLBufferRenderer {
 
 		}
 
-		info.update( object, count, mode, primcount );
+		info.update( object, count, primcount );
 
 	}
 
@@ -85,7 +85,7 @@ class WebGLBufferRenderer {
 
 			}
 
-			info.update( object, elementCount, mode, 1 );
+			info.update( object, elementCount, 1 );
 
 		}
 
@@ -120,18 +120,13 @@ class WebGLBufferRenderer {
 			}
 
 			let elementCount = 0;
-
 			for ( let i = 0; i < drawCount; i ++ ) {
 
-				elementCount += counts[ i ];
+				elementCount += counts[ i ] * primcount[ i ];
 
 			}
 
-			for ( let i = 0; i < primcount.length; i ++ ) {
-
-				info.update( object, elementCount, mode, primcount[ i ] );
-
-			}
+			info.update( object, elementCount, 1 );
 
 		}
 

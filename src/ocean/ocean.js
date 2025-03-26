@@ -5,22 +5,19 @@ import {ocean_builder_threaded} from './ocean-builder-threaded.js';
 import {quadtree} from './quadtree.js';
 import {utils} from './utils.js';
 import {ocean_material} from './ocean-material.js';
-
+import { vec4 } from "three/tsl";
 import {skybox} from './sky.js';
 
 
-
-export const ocean = (() => {
 
 
 	class OceanChunkManager extends entity.Component {
 		constructor(params) {
 			super();    	
-			this.Init(params);
 		}
 
 
-		Init(params) {
+		async Init(params) {
 			this.params_ = params;
 			this.builder_ = new ocean_builder_threaded.OceanChunkRebuilder_Threaded();
 
@@ -53,9 +50,20 @@ export const ocean = (() => {
 			}
 			
 			this.material_ = new ocean_material.OceanMaterial(oceanDatas).oceanMaterial;
+			//this.material_ = new THREE.MeshBasicNodeMaterial();
+			//this.material_.colorNode = vec4(1, 0, 0, 1);
 
 			this.InitSky(params);
 			this.InitOcean(params);
+
+
+			this.quadTree = new quadtree.Root({
+				size: ocean_constants.OCEAN_SIZE,
+				min_lod_radius: ocean_constants.QT_OCEAN_MIN_LOD_RADIUS,
+				lod_layers: ocean_constants.QT_OCEAN_MIN_NUM_LAYERS,
+				min_node_size: ocean_constants.QT_OCEAN_MIN_CELL_SIZE,
+			});
+
 		}
      
 
@@ -150,7 +158,7 @@ export const ocean = (() => {
 		}
 
 
-		Update(_) {
+		Update_(_) {
 			const cameraPosition = new THREE.Vector3();
 			const scenePosition = new THREE.Vector3();
 			this.params_.camera.getWorldPosition(cameraPosition);
@@ -166,43 +174,39 @@ export const ocean = (() => {
 				for (let k in this.chunks_) {
 					this.chunks_[k].chunk.Show();
 				}
-				this.UpdateVisibleChunks_Quadtree_(cameraPosition, scenePosition, relativeCameraPosition);       
+				this.UpdateVisibleChunks_Quadtree_( relativeCameraPosition );       
 			}
 			
 			for (let k in this.chunks_) {
-				this.chunks_[k].chunk.Update(relativeCameraPosition);
+				this.chunks_[k].chunk.Update( relativeCameraPosition );
 
 				this.chunks_[k].chunk.mesh_.material.wireframe = this.params_.guiParams.ocean.wireframe;
 			}
 			for (let c of this.builder_.old_) {
-				c.chunk.Update(relativeCameraPosition);
+				c.chunk.Update( relativeCameraPosition );
 			}
+
+
 
 			this.material_.positionNode.parameters.cameraPosition.value = relativeCameraPosition;
 			this.material_.colorNode.parameters.cameraPosition.value = relativeCameraPosition;
-			this.material_.colorNode.parameters.time.value = 0.01;
   
 		}//end Update
 
 
-		UpdateVisibleChunks_Quadtree_(cameraPosition, scenePosition, relativeCameraPosition) {
+
+		Key(c) {
+
+			return c.position[0] + '/' + c.position[1] + ' [' + c.size + ']';
+
+		}
 
 
-			function _Key(c) {
-				return c.position[0] + '/' + c.position[1] + ' [' + c.size + ']';
-			}
+		UpdateVisibleChunks_Quadtree_( cameraPosition ) {
 
-			const q = new quadtree.Root({
-				size: ocean_constants.OCEAN_SIZE,
-				min_lod_radius: ocean_constants.QT_OCEAN_MIN_LOD_RADIUS,
-				lod_layers: ocean_constants.QT_OCEAN_MIN_NUM_LAYERS,
-				min_node_size: ocean_constants.QT_OCEAN_MIN_CELL_SIZE,
-			});
+			this.quadTree.Insert( cameraPosition );
 
-			q.Insert(relativeCameraPosition);
-			//q.Insert(cameraPosition);
-
-			const sides = q.GetChildren();
+			const sides = this.quadTree.GetChildren();
 
 			let newOceanChunks = {};
 			const center = new THREE.Vector3();
@@ -226,18 +230,15 @@ export const ocean = (() => {
 
 				for (let c of sides.children) {
 					const child = _Child(c);
-					const k = _Key(child);
+					const k = this.Key(child);
 					
 					newOceanChunks[k] = child;
 				}
 
 
-			const allChunks = newOceanChunks;
 			const intersection = utils.DictIntersection(this.chunks_, newOceanChunks);
 			const difference = utils.DictDifference(newOceanChunks, this.chunks_);
 			const recycle = Object.values(utils.DictDifference(this.chunks_, newOceanChunks));
-
-			const allChunksLeft = utils.DictIntersection(newOceanChunks, recycle);
 
 
 			this.builder_.RetireChunks(recycle);
@@ -264,14 +265,13 @@ export const ocean = (() => {
 			}
 
 			this.chunks_ = newOceanChunks;
+
 		}
  
 	}//end class
 
 
 
-return {
-	OceanChunkManager: OceanChunkManager,
-}
 
-})();
+export default OceanChunkManager;
+

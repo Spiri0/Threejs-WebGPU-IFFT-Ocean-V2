@@ -1,10 +1,21 @@
 /**
- * Port from https://github.com/mapbox/earcut (v2.2.4)
+ * An implementation of the earcut polygon triangulation algorithm. The code
+ * is a port of [mapbox/earcut]{@link https://github.com/mapbox/earcut mapbox/earcut} (v2.2.4).
+ *
+ * @hideconstructor
  */
+class Earcut {
 
-const Earcut = {
-
-	triangulate: function ( data, holeIndices, dim = 2 ) {
+	/**
+	 * Triangulates the given shape definition by returning an array of triangles.
+	 *
+	 * @param {Array<number>} data - An array with 2D points.
+	 * @param {Array<number>} holeIndices - An array with indices defining holes.
+	 * @param {number} [dim=2] - The number of coordinates per vertex in the input array.
+	 * @return {Array<number>} An array representing the triangulated faces. Each face is defined by three consecutive numbers
+	 * representing vertex indices.
+	 */
+	static triangulate( data, holeIndices, dim = 2 ) {
 
 		const hasHoles = holeIndices && holeIndices.length;
 		const outerLen = hasHoles ? holeIndices[ 0 ] * dim : data.length;
@@ -46,7 +57,7 @@ const Earcut = {
 
 	}
 
-};
+}
 
 // create a circular doubly linked list from polygon points in the specified winding order
 function linkedList( data, start, end, dim, clockwise ) {
@@ -591,7 +602,7 @@ function pointInTriangle( ax, ay, bx, by, cx, cy, px, py ) {
 // check if a diagonal between two polygon nodes is valid (lies in polygon interior)
 function isValidDiagonal( a, b ) {
 
-	return a.next.i !== b.i && a.prev.i !== b.i && ! intersectsPolygon( a, b ) && // dones't intersect other edges
+	return a.next.i !== b.i && a.prev.i !== b.i && ! intersectsPolygon( a, b ) && // doesn't intersect other edges
            ( locallyInside( a, b ) && locallyInside( b, a ) && middleInside( a, b ) && // locally visible
             ( area( a.prev, a, b.prev ) || area( a, b.prev, b ) ) || // does not create opposite-facing sectors
             equals( a, b ) && area( a.prev, a, a.next ) > 0 && area( b.prev, b, b.next ) > 0 ); // special zero-length case

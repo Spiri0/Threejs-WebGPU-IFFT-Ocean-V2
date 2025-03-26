@@ -3,7 +3,8 @@ import {
 	FileLoader,
 	Float32BufferAttribute,
 	Loader,
-	Color
+	Color,
+	SRGBColorSpace
 } from 'three';
 
 /**
@@ -126,19 +127,19 @@ class PLYLoader extends Loader {
 			const lines = headerText.split( /\r\n|\r|\n/ );
 			let currentElement;
 
-			function make_ply_element_property( propertValues, propertyNameMapping ) {
+			function make_ply_element_property( propertyValues, propertyNameMapping ) {
 
-				const property = { type: propertValues[ 0 ] };
+				const property = { type: propertyValues[ 0 ] };
 
 				if ( property.type === 'list' ) {
 
-					property.name = propertValues[ 3 ];
-					property.countType = propertValues[ 1 ];
-					property.itemType = propertValues[ 2 ];
+					property.name = propertyValues[ 3 ];
+					property.countType = propertyValues[ 1 ];
+					property.itemType = propertyValues[ 2 ];
 
 				} else {
 
-					property.name = propertValues[ 1 ];
+					property.name = propertyValues[ 1 ];
 
 				}
 
@@ -468,8 +469,9 @@ class PLYLoader extends Loader {
 					_color.setRGB(
 						element[ cacheEntry.attrR ] / 255.0,
 						element[ cacheEntry.attrG ] / 255.0,
-						element[ cacheEntry.attrB ] / 255.0
-					).convertSRGBToLinear();
+						element[ cacheEntry.attrB ] / 255.0,
+						SRGBColorSpace
+					);
 
 					buffer.colors.push( _color.r, _color.g, _color.b );
 
@@ -516,8 +518,9 @@ class PLYLoader extends Loader {
 					_color.setRGB(
 						element[ cacheEntry.attrR ] / 255.0,
 						element[ cacheEntry.attrG ] / 255.0,
-						element[ cacheEntry.attrB ] / 255.0
-					).convertSRGBToLinear();
+						element[ cacheEntry.attrB ] / 255.0,
+						SRGBColorSpace
+					);
 					buffer.faceVertexColors.push( _color.r, _color.g, _color.b );
 					buffer.faceVertexColors.push( _color.r, _color.g, _color.b );
 					buffer.faceVertexColors.push( _color.r, _color.g, _color.b );
@@ -573,7 +576,7 @@ class PLYLoader extends Loader {
 
 				switch ( type ) {
 
-					// corespondences for non-specific length types here match rply:
+					// correspondences for non-specific length types here match rply:
 					case 'int8':	case 'char':	return { read: ( at ) => {
 
 						return dataview.getInt8( at );

@@ -51,18 +51,14 @@ class WebXRManager extends EventDispatcher {
 		//
 
 		const cameraL = new PerspectiveCamera();
-		cameraL.layers.enable( 1 );
 		cameraL.viewport = new Vector4();
 
 		const cameraR = new PerspectiveCamera();
-		cameraR.layers.enable( 2 );
 		cameraR.viewport = new Vector4();
 
 		const cameras = [ cameraL, cameraR ];
 
 		const cameraXR = new ArrayCamera();
-		cameraXR.layers.enable( 1 );
-		cameraXR.layers.enable( 2 );
 
 		let _currentDepthNear = null;
 		let _currentDepthFar = null;
@@ -279,7 +275,11 @@ class WebXRManager extends EventDispatcher {
 				currentPixelRatio = renderer.getPixelRatio();
 				renderer.getSize( currentSize );
 
-				if ( session.renderState.layers === undefined ) {
+				// Check that the browser implements the necessary APIs to use an
+				// XRProjectionLayer rather than an XRWebGLLayer
+				const useLayers = typeof XRWebGLBinding !== 'undefined' && 'createProjectionLayer' in XRWebGLBinding.prototype;
+
+				if ( ! useLayers ) {
 
 					const layerInit = {
 						antialias: attributes.antialias,
@@ -303,7 +303,10 @@ class WebXRManager extends EventDispatcher {
 							format: RGBAFormat,
 							type: UnsignedByteType,
 							colorSpace: renderer.outputColorSpace,
-							stencilBuffer: attributes.stencil
+							stencilBuffer: attributes.stencil,
+							resolveDepthBuffer: ( glBaseLayer.ignoreDepthValues === false ),
+							resolveStencilBuffer: ( glBaseLayer.ignoreDepthValues === false )
+
 						}
 					);
 
@@ -346,7 +349,8 @@ class WebXRManager extends EventDispatcher {
 							stencilBuffer: attributes.stencil,
 							colorSpace: renderer.outputColorSpace,
 							samples: attributes.antialias ? 4 : 0,
-							resolveDepthBuffer: ( glProjLayer.ignoreDepthValues === false )
+							resolveDepthBuffer: ( glProjLayer.ignoreDepthValues === false ),
+							resolveStencilBuffer: ( glProjLayer.ignoreDepthValues === false )
 						} );
 
 				}
@@ -461,6 +465,10 @@ class WebXRManager extends EventDispatcher {
 		 * the cameras' projection and world matrices have already been set.
 		 * And that near and far planes are identical for both cameras.
 		 * Visualization of this technique: https://computergraphics.stackexchange.com/a/4765
+		 *
+		 * @param {ArrayCamera} camera - The camera to update.
+		 * @param {PerspectiveCamera} cameraL - The left camera.
+		 * @param {PerspectiveCamera} cameraR - The right camera.
 		 */
 		function setProjectionFromUnion( camera, cameraL, cameraR ) {
 
@@ -571,6 +579,10 @@ class WebXRManager extends EventDispatcher {
 				_currentDepthFar = cameraXR.far;
 
 			}
+
+			cameraL.layers.mask = camera.layers.mask | 0b010;
+			cameraR.layers.mask = camera.layers.mask | 0b100;
+			cameraXR.layers.mask = cameraL.layers.mask | cameraR.layers.mask;
 
 			const parent = camera.parent;
 			const cameras = cameraXR.cameras;
@@ -778,8 +790,11 @@ class WebXRManager extends EventDispatcher {
 				//
 
 				const enabledFeatures = session.enabledFeatures;
+				const gpuDepthSensingEnabled = enabledFeatures &&
+					enabledFeatures.includes( 'depth-sensing' ) &&
+					session.depthUsage == 'gpu-optimized';
 
-				if ( enabledFeatures && enabledFeatures.includes( 'depth-sensing' ) ) {
+				if ( gpuDepthSensingEnabled && glBinding ) {
 
 					const depthData = glBinding.getDepthInformation( views[ 0 ] );
 

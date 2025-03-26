@@ -101,7 +101,7 @@ function computeMikkTSpaceTangents( geometry, MikkTSpace, negateSign = true ) {
 
 /**
  * @param  {Array<BufferGeometry>} geometries
- * @param  {Boolean} useGroups
+ * @param  {boolean} useGroups
  * @return {BufferGeometry}
  */
 function mergeGeometries( geometries, useGroups = false ) {
@@ -389,7 +389,7 @@ function mergeAttributes( attributes ) {
 }
 
 /**
- * @param {BufferAttribute}
+ * @param {BufferAttribute} attribute
  * @return {BufferAttribute}
  */
 export function deepCloneAttribute( attribute ) {

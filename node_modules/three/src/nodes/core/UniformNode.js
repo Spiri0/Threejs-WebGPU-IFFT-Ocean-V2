@@ -1,21 +1,64 @@
-import { registerNode } from './Node.js';
 import InputNode from './InputNode.js';
 import { objectGroup } from './UniformGroupNode.js';
 import { nodeObject, getConstNodeType } from '../tsl/TSLCore.js';
 
+/**
+ * Class for representing a uniform.
+ *
+ * @augments InputNode
+ */
 class UniformNode extends InputNode {
 
+	static get type() {
+
+		return 'UniformNode';
+
+	}
+
+	/**
+	 * Constructs a new uniform node.
+	 *
+	 * @param {any} value - The value of this node. Usually a JS primitive or three.js object (vector, matrix, color, texture).
+	 * @param {?string} nodeType - The node type. If no explicit type is defined, the node tries to derive the type from its value.
+	 */
 	constructor( value, nodeType = null ) {
 
 		super( value, nodeType );
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isUniformNode = true;
 
+		/**
+		 * The name or label of the uniform.
+		 *
+		 * @type {string}
+		 * @default ''
+		 */
 		this.name = '';
+
+		/**
+		 * The uniform group of this uniform. By default, uniforms are
+		 * managed per object but they might belong to a shared group
+		 * which is updated per frame or render call.
+		 *
+		 * @type {UniformGroupNode}
+		 */
 		this.groupNode = objectGroup;
 
 	}
 
+	/**
+	 * Sets the {@link UniformNode#name} property.
+	 *
+	 * @param {string} name - The name of the uniform.
+	 * @return {UniformNode} A reference to this node.
+	 */
 	label( name ) {
 
 		this.name = name;
@@ -24,6 +67,12 @@ class UniformNode extends InputNode {
 
 	}
 
+	/**
+	 * Sets the {@link UniformNode#groupNode} property.
+	 *
+	 * @param {UniformGroupNode} group - The uniform group.
+	 * @return {UniformNode} A reference to this node.
+	 */
 	setGroup( group ) {
 
 		this.groupNode = group;
@@ -32,12 +81,24 @@ class UniformNode extends InputNode {
 
 	}
 
+	/**
+	 * Returns the {@link UniformNode#groupNode}.
+	 *
+	 * @return {UniformGroupNode} The uniform group.
+	 */
 	getGroup() {
 
 		return this.groupNode;
 
 	}
 
+	/**
+	 * By default, this method returns the result of {@link Node#getHash} but derived
+	 * classes might overwrite this method with a different implementation.
+	 *
+	 * @param {NodeBuilder} builder - The current node builder.
+	 * @return {string} The uniform hash.
+	 */
 	getUniformHash( builder ) {
 
 		return this.getHash( builder );
@@ -95,8 +156,15 @@ class UniformNode extends InputNode {
 
 export default UniformNode;
 
-UniformNode.type = /*@__PURE__*/ registerNode( 'Uniform', UniformNode );
-
+/**
+ * TSL function for creating a uniform node.
+ *
+ * @tsl
+ * @function
+ * @param {any} arg1 - The value of this node. Usually a JS primitive or three.js object (vector, matrix, color, texture).
+ * @param {string} [arg2] - The node type. If no explicit type is defined, the node tries to derive the type from its value.
+ * @returns {UniformNode}
+ */
 export const uniform = ( arg1, arg2 ) => {
 
 	const nodeType = getConstNodeType( arg2 || arg1 );

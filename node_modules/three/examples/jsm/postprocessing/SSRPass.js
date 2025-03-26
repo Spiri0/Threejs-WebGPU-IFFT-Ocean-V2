@@ -16,9 +16,7 @@ import {
 	HalfFloatType,
 } from 'three';
 import { Pass, FullScreenQuad } from './Pass.js';
-import { SSRShader } from '../shaders/SSRShader.js';
-import { SSRBlurShader } from '../shaders/SSRShader.js';
-import { SSRDepthShader } from '../shaders/SSRShader.js';
+import { SSRBlurShader, SSRDepthShader, SSRShader } from '../shaders/SSRShader.js';
 import { CopyShader } from '../shaders/CopyShader.js';
 
 class SSRPass extends Pass {
@@ -337,7 +335,7 @@ class SSRPass extends Pass {
 		this.copyMaterial.dispose();
 		this.depthRenderMaterial.dispose();
 
-		// dipsose full screen quad
+		// dispose full screen quad
 
 		this.fsQuad.dispose();
 
@@ -558,9 +556,13 @@ class SSRPass extends Pass {
 		this.originalClearColor.copy( renderer.getClearColor( this.tempColor ) );
 		const originalClearAlpha = renderer.getClearAlpha( this.tempColor );
 		const originalAutoClear = renderer.autoClear;
+		const originalBackground = this.scene.background;
+		const originalFog = this.scene.fog;
 
 		renderer.setRenderTarget( renderTarget );
 		renderer.autoClear = false;
+		this.scene.background = null;
+		this.scene.fog = null;
 
 		clearColor = overrideMaterial.clearColor || clearColor;
 		clearAlpha = overrideMaterial.clearAlpha || clearAlpha;
@@ -599,6 +601,8 @@ class SSRPass extends Pass {
 		renderer.autoClear = originalAutoClear;
 		renderer.setClearColor( this.originalClearColor );
 		renderer.setClearAlpha( originalClearAlpha );
+		this.scene.background = originalBackground;
+		this.scene.fog = originalFog;
 
 	}
 

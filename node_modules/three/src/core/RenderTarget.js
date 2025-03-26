@@ -54,6 +54,7 @@ class RenderTarget extends EventDispatcher {
 
 			this.textures[ i ] = texture.clone();
 			this.textures[ i ].isRenderTargetTexture = true;
+			this.textures[ i ].renderTarget = this;
 
 		}
 
@@ -63,6 +64,7 @@ class RenderTarget extends EventDispatcher {
 		this.resolveDepthBuffer = options.resolveDepthBuffer;
 		this.resolveStencilBuffer = options.resolveStencilBuffer;
 
+		this._depthTexture = null;
 		this.depthTexture = options.depthTexture;
 
 		this.samples = options.samples;
@@ -78,6 +80,21 @@ class RenderTarget extends EventDispatcher {
 	set texture( value ) {
 
 		this.textures[ 0 ] = value;
+
+	}
+
+	set depthTexture( current ) {
+
+		if ( this._depthTexture !== null ) this._depthTexture.renderTarget = null;
+		if ( current !== null ) current.renderTarget = this;
+
+		this._depthTexture = current;
+
+	}
+
+	get depthTexture() {
+
+		return this._depthTexture;
 
 	}
 
@@ -129,13 +146,14 @@ class RenderTarget extends EventDispatcher {
 
 			this.textures[ i ] = source.textures[ i ].clone();
 			this.textures[ i ].isRenderTargetTexture = true;
+			this.textures[ i ].renderTarget = this;
+
+			// ensure image object is not shared, see #20328
+
+			const image = Object.assign( {}, source.textures[ i ].image );
+			this.textures[ i ].source = new Source( image );
 
 		}
-
-		// ensure image object is not shared, see #20328
-
-		const image = Object.assign( {}, source.texture.image );
-		this.texture.source = new Source( image );
 
 		this.depthBuffer = source.depthBuffer;
 		this.stencilBuffer = source.stencilBuffer;

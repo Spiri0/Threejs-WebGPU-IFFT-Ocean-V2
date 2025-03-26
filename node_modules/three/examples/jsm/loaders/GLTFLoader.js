@@ -267,16 +267,6 @@ class GLTFLoader extends Loader {
 
 	}
 
-	setDDSLoader() {
-
-		throw new Error(
-
-			'THREE.GLTFLoader: "MSFT_texture_dds" no longer supported. Please update to "KHR_texture_basisu".'
-
-		);
-
-	}
-
 	setKTX2Loader( ktx2Loader ) {
 
 		this.ktx2Loader = ktx2Loader;
@@ -609,8 +599,6 @@ class GLTFLightsExtension {
 		// Some lights (e.g. spot) default to a position other than the origin. Reset the position
 		// here, because node-level parsing will only override position if explicitly specified.
 		lightNode.position.set( 0, 0, 0 );
-
-		lightNode.decay = 2;
 
 		assignExtrasToUserData( lightNode, lightDef );
 
@@ -2265,6 +2253,9 @@ const ALPHA_MODES = {
 
 /**
  * Specification: https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#default-material
+ *
+ * @param {Object<string, Material>} cache
+ * @return {Material}
  */
 function createDefaultMaterial( cache ) {
 
@@ -2535,6 +2526,7 @@ function getImageURIMimeType( uri ) {
 
 	if ( uri.search( /\.jpe?g($|\?)/i ) > 0 || uri.search( /^data\:image\/jpeg/ ) === 0 ) return 'image/jpeg';
 	if ( uri.search( /\.webp($|\?)/i ) > 0 || uri.search( /^data\:image\/webp/ ) === 0 ) return 'image/webp';
+	if ( uri.search( /\.ktx2($|\?)/i ) > 0 || uri.search( /^data\:image\/ktx2/ ) === 0 ) return 'image/ktx2';
 
 	return 'image/png';
 
@@ -2762,6 +2754,9 @@ class GLTFParser {
 	 * Textures) can be reused directly and are not marked here.
 	 *
 	 * Example: CesiumMilkTruck sample model reuses "Wheel" meshes.
+	 *
+	 * @param {Object} cache
+	 * @param {Object3D} index
 	 */
 	_addNodeRef( cache, index ) {
 
@@ -2777,7 +2772,14 @@ class GLTFParser {
 
 	}
 
-	/** Returns a reference to a shared resource, cloning it if necessary. */
+	/**
+	 * Returns a reference to a shared resource, cloning it if necessary.
+	 *
+	 * @param {Object} cache
+	 * @param {number} index
+	 * @param {Object} object
+	 * @return {Object}
+	 */
 	_getNodeRef( cache, index, object ) {
 
 		if ( cache.refs[ index ] <= 1 ) return object;
@@ -3153,6 +3155,9 @@ class GLTFParser {
 
 				}
 
+				// Ignore normalized since we copy from sparse
+				bufferAttribute.normalized = false;
+
 				for ( let i = 0, il = sparseIndices.length; i < il; i ++ ) {
 
 					const index = sparseIndices[ i ];
@@ -3164,6 +3169,8 @@ class GLTFParser {
 					if ( itemSize >= 5 ) throw new Error( 'THREE.GLTFLoader: Unsupported itemSize in sparse BufferAttribute.' );
 
 				}
+
+				bufferAttribute.normalized = normalized;
 
 			}
 
@@ -3235,6 +3242,7 @@ class GLTFParser {
 			texture.minFilter = WEBGL_FILTERS[ sampler.minFilter ] || LinearMipmapLinearFilter;
 			texture.wrapS = WEBGL_WRAPPINGS[ sampler.wrapS ] || RepeatWrapping;
 			texture.wrapT = WEBGL_WRAPPINGS[ sampler.wrapT ] || RepeatWrapping;
+			texture.generateMipmaps = ! texture.isCompressedTexture && texture.minFilter !== NearestFilter && texture.minFilter !== LinearFilter;
 
 			parser.associations.set( texture, { textures: textureIndex } );
 
@@ -3343,9 +3351,11 @@ class GLTFParser {
 
 	/**
 	 * Asynchronously assigns a texture to the given material parameters.
+	 *
 	 * @param {Object} materialParams
 	 * @param {string} mapName
 	 * @param {Object} mapDef
+	 * @param {string} colorSpace
 	 * @return {Promise<Texture>}
 	 */
 	assignTexture( materialParams, mapName, mapDef, colorSpace ) {
@@ -3654,7 +3664,12 @@ class GLTFParser {
 
 	}
 
-	/** When Object3D instances are targeted by animation, they need unique names. */
+	/**
+	 * When Object3D instances are targeted by animation, they need unique names.
+	 *
+	 * @param {string} originalName
+	 * @return {string}
+	 */
 	createUniqueName( originalName ) {
 
 		const sanitizedName = PropertyBinding.sanitizeNodeName( originalName || '' );

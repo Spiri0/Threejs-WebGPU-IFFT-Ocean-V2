@@ -5,6 +5,7 @@ import {
 	BufferGeometry,
 	ClampToEdgeWrapping,
 	Color,
+	ColorManagement,
 	DirectionalLight,
 	DoubleSide,
 	FileLoader,
@@ -298,7 +299,7 @@ class ColladaLoader extends Loader {
 
 			if ( hasChildren === false ) {
 
-				// since 'id' attributes can be optional, it's necessary to generate a UUID for unqiue assignment
+				// since 'id' attributes can be optional, it's necessary to generate a UUID for unique assignment
 
 				library.animations[ xml.getAttribute( 'id' ) || MathUtils.generateUUID() ] = data;
 
@@ -976,7 +977,7 @@ class ColladaLoader extends Loader {
 				}
 
 				// we sort the joints in descending order based on the weights.
-				// this ensures, we only procced the most important joints of the vertex
+				// this ensures, we only proceed the most important joints of the vertex
 
 				vertexSkinData.sort( descending );
 
@@ -1592,7 +1593,7 @@ class ColladaLoader extends Loader {
 
 				}
 
-				// create texture if image is avaiable
+				// create texture if image is available
 
 				if ( image !== null ) {
 
@@ -1681,9 +1682,9 @@ class ColladaLoader extends Loader {
 
 			}
 
-			material.color.convertSRGBToLinear();
-			if ( material.specular ) material.specular.convertSRGBToLinear();
-			if ( material.emissive ) material.emissive.convertSRGBToLinear();
+			ColorManagement.toWorkingColorSpace( material.color, SRGBColorSpace );
+			if ( material.specular ) ColorManagement.toWorkingColorSpace( material.specular, SRGBColorSpace );
+			if ( material.emissive ) ColorManagement.toWorkingColorSpace( material.emissive, SRGBColorSpace );
 
 			//
 
@@ -2019,7 +2020,8 @@ class ColladaLoader extends Loader {
 
 					case 'color':
 						const array = parseFloats( child.textContent );
-						data.color = new Color().fromArray( array ).convertSRGBToLinear();
+						data.color = new Color().fromArray( array );
+						ColorManagement.toWorkingColorSpace( data.color, SRGBColorSpace );
 						break;
 
 					case 'falloff_angle':
@@ -2390,7 +2392,7 @@ class ColladaLoader extends Loader {
 						break;
 
 					default:
-						console.warn( 'THREE.ColladaLoader: Unknow primitive type:', primitive.type );
+						console.warn( 'THREE.ColladaLoader: Unknown primitive type:', primitive.type );
 
 				}
 
@@ -2548,8 +2550,9 @@ class ColladaLoader extends Loader {
 					tempColor.setRGB(
 						array[ startIndex + 0 ],
 						array[ startIndex + 1 ],
-						array[ startIndex + 2 ]
-					).convertSRGBToLinear();
+						array[ startIndex + 2 ],
+						SRGBColorSpace
+					);
 
 					array[ startIndex + 0 ] = tempColor.r;
 					array[ startIndex + 1 ] = tempColor.g;
@@ -3431,7 +3434,7 @@ class ColladaLoader extends Loader {
 			let i, j, data;
 
 			// a skeleton can have multiple root bones. collada expresses this
-			// situtation with multiple "skeleton" tags per controller instance
+			// situation with multiple "skeleton" tags per controller instance
 
 			for ( i = 0; i < skeletons.length; i ++ ) {
 
@@ -3968,7 +3971,7 @@ class ColladaLoader extends Loader {
 				} else {
 
 					result += '\n';
-					stack.push.apply( stack, node.childNodes );
+					stack.push( ...node.childNodes );
 
 				}
 

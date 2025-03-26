@@ -1,6 +1,6 @@
 import {THREE} from '../three-defs.js';
 import {RGBMLoader} from '../three-defs.js';
-import {MeshBasicNodeMaterial, texture, cubeTexture, attribute, uniform, vec3, vec4} from "three/tsl";
+import { texture, cubeTexture, attribute, uniform, vec3, vec4} from "three/tsl";
 import {entity} from '../entity.js';
 import {ocean_constants} from './ocean-constants.js';
 import {vertexStageWGSL} from  '../../resources/shader/ocean/vertexStageWGSL.js';
@@ -48,7 +48,6 @@ export const ocean_material = (() => {
 				vTexelCoord0: vertexStageWGSL.vTexelCoord0,
 				vTexelCoord1: vertexStageWGSL.vTexelCoord1,
 				vTexelCoord2: vertexStageWGSL.vTexelCoord2,
-				vTexelCoord3: vertexStageWGSL.vTexelCoord3,
 				position: attribute("position"),
 				vindex: attribute("vindex"),
 				width: attribute("width"),
@@ -61,15 +60,12 @@ export const ocean_material = (() => {
 				displacement0: texture(params.cascades[0].displacement),
 				displacement1: texture(params.cascades[1].displacement),
 				displacement2: texture(params.cascades[2].displacement),
-				displacement3: texture(params.cascades[3].displacement),
 				derivatives0: texture(params.cascades[0].derivative),
 				derivatives1: texture(params.cascades[1].derivative),
 				derivatives2: texture(params.cascades[2].derivative),
-				derivatives3: texture(params.cascades[3].derivative),
 				jacobian0: texture(params.cascades[0].jacobian),
 				jacobian1: texture(params.cascades[1].jacobian),
 				jacobian2: texture(params.cascades[2].jacobian),
-				jacobian3: texture(params.cascades[3].jacobian),
 				ifft_sampler: texture(params.cascades[0].derivative),
 				//depthTexture: params.threejs.sceneDepthPassTexture,
 				foamStrength: params.foamStrength,
@@ -79,7 +75,6 @@ export const ocean_material = (() => {
 					params.cascades[0].params_.lengthScale,
 					params.cascades[1].params_.lengthScale,
 					params.cascades[2].params_.lengthScale,
-					params.cascades[3].params_.lengthScale,
 				),
 				//envTexture: cubeTexture(environmentTexture),
 				//envTexture_sampler: cubeTexture(environmentTexture),
@@ -88,7 +83,7 @@ export const ocean_material = (() => {
 				sunPosition: uniform(params.sunPosition)    
 			}
         
-			this.oceanMaterial = new MeshBasicNodeMaterial();
+			this.oceanMaterial = new THREE.MeshBasicNodeMaterial();
 			this.oceanMaterial.positionNode = vertexStageWGSL.vertexStageWGSL(wgslShaderParams);
 			this.oceanMaterial.colorNode = fragmentStageWGSL(wgslShaderParams);
 			this.oceanMaterial.side = THREE.DoubleSide;

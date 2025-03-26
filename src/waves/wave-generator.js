@@ -1,9 +1,8 @@
 import {THREE} from '../three-defs.js';
-import {textureStore, instanceIndex} from "three/tsl";
+import { instanceIndex, storage } from "three/tsl";
 import {entity} from '../entity.js';
-
 import {wave_constants} from './wave-constants.js';
-import {wave_cascade} from './wave-cascade.js';
+import WaveCascade from './wave-cascade.js';
 import {butterflyWGSL} from "../../resources/shader/IFFT/butterfly.js";
 
 
@@ -12,20 +11,18 @@ export const wave_generator = (() => {
 	class WaveGenerator extends entity.Component {
 		constructor(params) {
 			super();
-			this.Init(params);
 		}
 
-		Init(params) {
+		async Init(params) {
 			this.params_ = params;
  
-
 			this.size = wave_constants.TEXTURE_SIZE;
-			this.butterflyTexture = new THREE.StorageTexture(Math.log2(this.size), this.size);
-			this.butterflyTexture.magFilter = this.butterflyTexture.minFilter = THREE.NearestFilter;
-			this.butterflyTexture.type = THREE.FloatType;
-  
+
+			this.butterflyBuffer = new THREE.StorageBufferAttribute( new Float32Array( Math.log2( this.size ) * this.size * 4 ), 4 );
+
+
 			this.butterfly = butterflyWGSL({ 
-				writeButterfly: textureStore(this.butterflyTexture), 
+				butterflyBuffer: storage( this.butterflyBuffer, 'vec4', this.butterflyBuffer.count ),
 				index: instanceIndex,
 				N: this.size,
 			}).compute(Math.log2(this.size) * this.size);
@@ -102,7 +99,7 @@ export const wave_generator = (() => {
 			//cutoff condition to prevent small wavelengths from occurring in large cascades and large wavelengths from occurring in small cascades
 			for(let i = 0; i < this.lengthScale.length; i++){
 				const boundaryHigh = i < this.lengthScale.length - 1 ?  2 * Math.PI / this.lengthScale[i + 1] * 6 : 9999;
-				this.cascades.push(new wave_cascade.WaveCascade({...this.params_, ...this.CascadeParams(i, boundaryLow, boundaryHigh)}));
+				this.cascades.push(new WaveCascade({...this.params_, ...this.CascadeParams(i, boundaryLow, boundaryHigh)}));
 				boundaryLow = boundaryHigh;
 			}
 		}
@@ -110,27 +107,28 @@ export const wave_generator = (() => {
 
 		CascadeParams(i, low, high){
 			return{
-				size: this.size, 
-				butterfly: this.butterflyTexture,
+				size: this.size,
+				noise: this.noise,
 				lengthScale: this.lengthScale[i],
 				lambda: this.lambda[i],
 				boundaryLow: low,
 				boundaryHigh: high,
-				waveSettings: this.waveSettings
+				waveSettings: this.waveSettings,
+				butterflyBuffer: this.butterflyBuffer
 			}
 		}
 
 
-		Update(dt) {
+		async Update_(dt) {
 			for(let i = 0; i < this.cascades.length; i++){
-				this.cascades[i].Update(dt);
+				await this.cascades[i].Update(dt);
 			}
 		}
 
 	}
 
 	return {
-		WaveGenerator: WaveGenerator,
+		WaveGenerator,
 	};
   
 })();

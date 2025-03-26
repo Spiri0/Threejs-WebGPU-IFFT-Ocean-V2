@@ -1,33 +1,42 @@
 import {wgslFn} from "three/tsl";
 
+
 export const IFFT_VerticalWGSL = wgslFn(`
 
-    fn computeWGSL( 
-        writeTex: texture_storage_2d<rgba32float, write>,
-        readTex: texture_2d<f32>,
-        butterfly: texture_2d<f32>,
-        index: u32,
-        size: f32,
-        step: f32,
-    ) -> void {
+	fn computeWGSL(
+		butterflyBuffer: ptr<storage, array<vec4<f32>>, read>,
+		pingpongBuffer: ptr<storage, array<vec4<f32>>, read_write>,
+		initBufferIndex: u32,
+		index: u32,
+		size: u32,
+		step: u32,
+		logN: u32,
+		pingpong: u32,
+	) -> void {
 
-        var posX = index % u32(size);
-        var posY = index / u32(size);
-        var idx = vec2u(posX, posY);
+		var posX = index % size;
+		var posY = index / size;
 
-        var data = textureLoad(butterfly, vec2<u32>(u32(step), idx.y), 0);
-        var even = textureLoad(readTex, vec2<u32>(idx.x, u32(data.z)), 0).rg;
-        var odd = textureLoad(readTex, vec2<u32>(idx.x, u32(data.w)), 0).rg;
+		let butterflyIndex = posY * logN + step;
+		let data = butterflyBuffer[butterflyIndex];
 
-        var H: vec2<f32> = even + multiplyComplex(data.rg, odd.xy);
+		let bufferIndexEven = u32(data.z) * size + posX;
+		let bufferIndexOdd = u32(data.w) * size + posX;
 
-        textureStore(writeTex, idx, vec4<f32>(H, 0, 1));
-    }
+		var even = select(pingpongBuffer[bufferIndexEven].xy, pingpongBuffer[bufferIndexEven].zw, pingpong == 0);
+		var odd  = select(pingpongBuffer[bufferIndexOdd].xy, pingpongBuffer[bufferIndexOdd].zw, pingpong == 0);
 
-    const PI: f32 = 3.141592653589793;
+		var H: vec2<f32> = even + multiplyComplex( data.rg, odd );
 
-    fn multiplyComplex(a: vec2<f32>, b: vec2<f32>) -> vec2<f32> {
-        return vec2<f32>(a.x * b.x - a.y * b.y, a.y * b.x + a.x * b.y);
-    }
+		pingpongBuffer[index] = vec4<f32>(
+			select(pingpongBuffer[index].xy, H, pingpong == 0),
+			select(H, pingpongBuffer[index].zw, pingpong == 0)
+		);
+
+	}
+
+	fn multiplyComplex(a: vec2<f32>, b: vec2<f32>) -> vec2<f32> {
+		return vec2<f32>(a.x * b.x - a.y * b.y, a.y * b.x + a.x * b.y);
+	}
+
 `);
-

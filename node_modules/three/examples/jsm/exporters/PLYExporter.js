@@ -1,7 +1,9 @@
 import {
 	Matrix3,
 	Vector3,
-	Color
+	Color,
+	ColorManagement,
+	SRGBColorSpace
 } from 'three';
 
 /**
@@ -122,7 +124,7 @@ class PLYExporter {
 		if ( includeIndices && faceCount !== Math.floor( faceCount ) ) {
 
 			// point cloud meshes will not have an index array and may not have a
-			// number of vertices that is divisble by 3 (and therefore representable
+			// number of vertices that is divisible by 3 (and therefore representable
 			// as triangles)
 			console.error(
 
@@ -204,7 +206,7 @@ class PLYExporter {
 			// 2 uv values at 4 bytes
 			const vertexListLength = vertexCount * ( 4 * 3 + ( includeNormals ? 4 * 3 : 0 ) + ( includeColors ? 3 : 0 ) + ( includeUVs ? 4 * 2 : 0 ) );
 
-			// 1 byte shape desciptor
+			// 1 byte shape descriptor
 			// 3 vertex indices at ${indexByteCount} bytes
 			const faceListLength = includeIndices ? faceCount * ( indexByteCount * 3 + 1 ) : 0;
 			const output = new DataView( new ArrayBuffer( headerBin.length + vertexListLength + faceListLength ) );
@@ -302,9 +304,9 @@ class PLYExporter {
 
 						if ( colors != null ) {
 
-							tempColor
-								.fromBufferAttribute( colors, i )
-								.convertLinearToSRGB();
+							tempColor.fromBufferAttribute( colors, i );
+
+							ColorManagement.fromWorkingColorSpace( tempColor, SRGBColorSpace );
 
 							output.setUint8( vOffset, Math.floor( tempColor.r * 255 ) );
 							vOffset += 1;
@@ -461,9 +463,9 @@ class PLYExporter {
 
 						if ( colors != null ) {
 
-							tempColor
-								.fromBufferAttribute( colors, i )
-								.convertLinearToSRGB();
+							tempColor.fromBufferAttribute( colors, i );
+
+							ColorManagement.fromWorkingColorSpace( tempColor, SRGBColorSpace );
 
 							line += ' ' +
 								Math.floor( tempColor.r * 255 ) + ' ' +

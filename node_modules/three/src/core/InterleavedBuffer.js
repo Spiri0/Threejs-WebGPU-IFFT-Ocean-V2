@@ -1,6 +1,5 @@
-import * as MathUtils from '../math/MathUtils.js';
+import { generateUUID } from '../math/MathUtils.js';
 import { StaticDrawUsage } from '../constants.js';
-import { warnOnce } from '../utils.js';
 
 class InterleavedBuffer {
 
@@ -13,12 +12,11 @@ class InterleavedBuffer {
 		this.count = array !== undefined ? array.length / stride : 0;
 
 		this.usage = StaticDrawUsage;
-		this._updateRange = { offset: 0, count: - 1 };
 		this.updateRanges = [];
 
 		this.version = 0;
 
-		this.uuid = MathUtils.generateUUID();
+		this.uuid = generateUUID();
 
 	}
 
@@ -27,13 +25,6 @@ class InterleavedBuffer {
 	set needsUpdate( value ) {
 
 		if ( value === true ) this.version ++;
-
-	}
-
-	get updateRange() {
-
-		warnOnce( 'THREE.InterleavedBuffer: updateRange() is deprecated and will be removed in r169. Use addUpdateRange() instead.' ); // @deprecated, r159
-		return this._updateRange;
 
 	}
 
@@ -101,7 +92,7 @@ class InterleavedBuffer {
 
 		if ( this.array.buffer._uuid === undefined ) {
 
-			this.array.buffer._uuid = MathUtils.generateUUID();
+			this.array.buffer._uuid = generateUUID();
 
 		}
 
@@ -140,7 +131,7 @@ class InterleavedBuffer {
 
 		if ( this.array.buffer._uuid === undefined ) {
 
-			this.array.buffer._uuid = MathUtils.generateUUID();
+			this.array.buffer._uuid = generateUUID();
 
 		}
 

@@ -1,6 +1,6 @@
 import {THREE} from '../three-defs.js';
-import {BackSide, BoxGeometry, Mesh, Vector3, DoubleSide} from 'three';
-import {MeshBasicNodeMaterial, MeshStandardNodeMaterial, wgslFn, uniform, attribute, varyingProperty, vec4} from 'three/tsl';
+import { BoxGeometry, Mesh, Vector3, DoubleSide} from 'three';
+import { uniform, attribute, varyingProperty, vec4} from 'three/tsl';
 import {vertexStageWGSL} from  '../../resources/shader/sky/vertexStageWGSL.js';
 import {fragmentStageWGSL} from  '../../resources/shader/sky/fragmentStageWGSL.js';
 
@@ -33,7 +33,7 @@ export const skybox = (() => {
 				
 			}
 
-			const material = new MeshBasicNodeMaterial();
+			const material = new THREE.MeshBasicNodeMaterial();
 			//material.positionNode = vertexStageWGSL.vertexStageWGSL(wgslShaderParams);
 			//material.colorNode = vec4(0.5, 0, 0, 1);//fragmentStageWGSL(wgslShaderParams);
 			material.colorNode = fragmentStageWGSL(wgslShaderParams);

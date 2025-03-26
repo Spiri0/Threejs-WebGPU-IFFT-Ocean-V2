@@ -99,16 +99,15 @@ import { FullScreenQuad } from '../postprocessing/Pass.js';
  * // And compute each frame, before rendering to screen:
  * gpuCompute.doRenderTarget( myFilter1, myRenderTarget );
  * gpuCompute.doRenderTarget( myFilter2, outputRenderTarget );
- *
- *
- *
- * @param {int} sizeX Computation problem size is always 2d: sizeX * sizeY elements.
- * @param {int} sizeY Computation problem size is always 2d: sizeX * sizeY elements.
- * @param {WebGLRenderer} renderer The renderer
-  */
+ */
 
 class GPUComputationRenderer {
 
+	/**
+	 * @param {number} sizeX Computation problem size is always 2d: sizeX * sizeY elements.
+ 	 * @param {number} sizeY Computation problem size is always 2d: sizeX * sizeY elements.
+ 	 * @param {WebGLRenderer} renderer The renderer
+	 */
 	constructor( sizeX, sizeY, renderer ) {
 
 		this.variables = [];

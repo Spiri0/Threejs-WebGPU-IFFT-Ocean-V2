@@ -6,9 +6,8 @@ import SplitNode from '../utils/SplitNode.js';
 import SetNode from '../utils/SetNode.js';
 import FlipNode from '../utils/FlipNode.js';
 import ConstNode from '../core/ConstNode.js';
+import MemberNode from '../utils/MemberNode.js';
 import { getValueFromType, getValueType } from '../core/NodeUtils.js';
-
-//
 
 let currentStack = null;
 
@@ -111,6 +110,12 @@ const shaderNodeHandler = {
 				// accessing array
 
 				return nodeObject( new ArrayElementNode( nodeObj, new ConstNode( Number( prop ), 'uint' ) ) );
+
+			} else if ( /^get$/.test( prop ) === true ) {
+
+				// accessing properties
+
+				return ( value ) => nodeObject( new MemberNode( nodeObj, value ) );
 
 			}
 
@@ -261,6 +266,12 @@ class ShaderCallNodeInternal extends Node {
 
 	}
 
+	getMemberType( builder, name ) {
+
+		return this.getOutputNode( builder ).getMemberType( builder, name );
+
+	}
+
 	call( builder ) {
 
 		const { shaderNode, inputNodes } = this;
@@ -294,18 +305,14 @@ class ShaderCallNodeInternal extends Node {
 
 			}
 
-			if ( builder.currentFunctionNode !== null ) {
-
-				builder.currentFunctionNode.includes.push( functionNode );
-
-			}
+			builder.addInclude( functionNode );
 
 			result = nodeObject( functionNode.call( inputNodes ) );
 
 		} else {
 
 			const jsFunc = shaderNode.jsFunc;
-			const outputNode = inputNodes !== null ? jsFunc( inputNodes, builder ) : jsFunc( builder );
+			const outputNode = inputNodes !== null || jsFunc.length > 1 ? jsFunc( inputNodes || [], builder ) : jsFunc( builder );
 
 			result = nodeObject( outputNode );
 
@@ -553,6 +560,14 @@ export const Fn = ( jsFunc, nodeType ) => {
 
 };
 
+/**
+ * @tsl
+ * @function
+ * @deprecated since r168. Use {@link Fn} instead.
+ *
+ * @param  {...any} params
+ * @returns {Function}
+ */
 export const tslFn = ( ...params ) => { // @deprecated, r168
 
 	console.warn( 'TSL.ShaderNode: tslFn() has been renamed to Fn().' );

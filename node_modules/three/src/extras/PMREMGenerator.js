@@ -60,6 +60,8 @@ const _axisDirections = [
 	/*@__PURE__*/ new Vector3( - 1, 1, 1 ),
 	/*@__PURE__*/ new Vector3( 1, 1, 1 ) ];
 
+const _origin = /*@__PURE__*/ new Vector3();
+
 /**
  * This class generates a Prefiltered, Mipmapped Radiance Environment Map
  * (PMREM) from a cubeMap environment texture. This allows different levels of
@@ -100,10 +102,21 @@ class PMREMGenerator {
 	 * Generates a PMREM from a supplied Scene, which can be faster than using an
 	 * image if networking bandwidth is low. Optional sigma specifies a blur radius
 	 * in radians to be applied to the scene before PMREM generation. Optional near
-	 * and far planes ensure the scene is rendered in its entirety (the cubeCamera
-	 * is placed at the origin).
+	 * and far planes ensure the scene is rendered in its entirety.
+	 *
+	 * @param {Scene} scene
+	 * @param {number} sigma
+	 * @param {number} near
+	 * @param {number} far
+	 * @param {Object} [options={}]
+	 * @return {WebGLRenderTarget}
 	 */
-	fromScene( scene, sigma = 0, near = 0.1, far = 100 ) {
+	fromScene( scene, sigma = 0, near = 0.1, far = 100, options = {} ) {
+
+		const {
+			size = 256,
+			position = _origin,
+		} = options;
 
 		_oldTarget = this._renderer.getRenderTarget();
 		_oldActiveCubeFace = this._renderer.getActiveCubeFace();
@@ -112,12 +125,12 @@ class PMREMGenerator {
 
 		this._renderer.xr.enabled = false;
 
-		this._setSize( 256 );
+		this._setSize( size );
 
 		const cubeUVRenderTarget = this._allocateTargets();
 		cubeUVRenderTarget.depthBuffer = true;
 
-		this._sceneToCubeUV( scene, near, far, cubeUVRenderTarget );
+		this._sceneToCubeUV( scene, near, far, cubeUVRenderTarget, position );
 
 		if ( sigma > 0 ) {
 
@@ -137,6 +150,10 @@ class PMREMGenerator {
 	 * or HDR. The ideal input image size is 1k (1024 x 512),
 	 * as this matches best with the 256 x 256 cubemap output.
 	 * The smallest supported equirectangular image size is 64 x 32.
+	 *
+	 * @param {Texture} equirectangular
+	 * @param {?WebGLRenderTarget} [renderTarget=null] - Optional render target.
+	 * @return {WebGLRenderTarget}
 	 */
 	fromEquirectangular( equirectangular, renderTarget = null ) {
 
@@ -149,6 +166,10 @@ class PMREMGenerator {
 	 * or HDR. The ideal input cube size is 256 x 256,
 	 * as this matches best with the 256 x 256 cubemap output.
 	 * The smallest supported cube size is 16 x 16.
+	 *
+	 * @param {Texture} cubemap
+	 * @param {null} [renderTarget=null] - Optional render target.
+	 * @return {WebGLRenderTarget}
 	 */
 	fromCubemap( cubemap, renderTarget = null ) {
 
@@ -306,7 +327,7 @@ class PMREMGenerator {
 
 	}
 
-	_sceneToCubeUV( scene, near, far, cubeUVRenderTarget ) {
+	_sceneToCubeUV( scene, near, far, cubeUVRenderTarget, position ) {
 
 		const fov = 90;
 		const aspect = 1;
@@ -358,17 +379,21 @@ class PMREMGenerator {
 			if ( col === 0 ) {
 
 				cubeCamera.up.set( 0, upSign[ i ], 0 );
-				cubeCamera.lookAt( forwardSign[ i ], 0, 0 );
+				cubeCamera.position.set( position.x, position.y, position.z );
+				cubeCamera.lookAt( position.x + forwardSign[ i ], position.y, position.z );
 
 			} else if ( col === 1 ) {
 
 				cubeCamera.up.set( 0, 0, upSign[ i ] );
-				cubeCamera.lookAt( 0, forwardSign[ i ], 0 );
+				cubeCamera.position.set( position.x, position.y, position.z );
+				cubeCamera.lookAt( position.x, position.y + forwardSign[ i ], position.z );
+
 
 			} else {
 
 				cubeCamera.up.set( 0, upSign[ i ], 0 );
-				cubeCamera.lookAt( 0, 0, forwardSign[ i ] );
+				cubeCamera.position.set( position.x, position.y, position.z );
+				cubeCamera.lookAt( position.x, position.y, position.z + forwardSign[ i ] );
 
 			}
 
@@ -466,6 +491,12 @@ class PMREMGenerator {
 	 * the blur latitudinally (around the poles), and then longitudinally (towards
 	 * the poles) to approximate the orthogonally-separable blur. It is least
 	 * accurate at the poles, but still does a decent job.
+	 *
+	 * @param {WebGLRenderTarget} cubeUVRenderTarget
+	 * @param {number} lodIn
+	 * @param {number} lodOut
+	 * @param {number} sigma
+	 * @param {Vector3} [poleAxis]
 	 */
 	_blur( cubeUVRenderTarget, lodIn, lodOut, sigma, poleAxis ) {
 
