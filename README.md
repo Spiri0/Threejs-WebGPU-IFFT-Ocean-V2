@@ -1,4 +1,4 @@
-See it running live [here](https://spiri0.github.io/Threejs-WebGPU-IFFT-Ocean-V2/index.html)
+See it running live [here](https://spiri0.github.io/Threejs-WebGPU-IFFT-Ocean/index.html)
 
 ![ocean_social](https://github.com/user-attachments/assets/31a04239-c9e2-4e16-ac56-af78e51e4560)
 
