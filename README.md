@@ -5,6 +5,9 @@ See it running live [here](https://spiri0.github.io/Threejs-WebGPU-IFFT-Ocean/in
 
 March 26, 2025: I've switched the IFFT system from storage textures to storage buffers. This saves a lot of compute steps and allows for the use of larger cascade textures. Now 3x512 instead of the previous 4x256. The performance has improved significantly.
 
+For those interested in physically accurate buoyancy simulations, here's a voxelizer. With it, you can very precisely determine the volume of water displaced by a body of any shape, and thus the buoyancy force. I'll be working on this further.
+https://github.com/Spiri0/Threejs-WebGPU-Voxelizer
+
 Threejs-WebGPU-IFFT-Ocean r174
 This is a physically real ocean simulation using the jonswap ocean model and inverse fast fourier transformation.
 In src/ocean/ocean_constants.js you can use QT_OCEAN_MIN_CELL_RESOLUTION to have a higher resolution of the wireframe (even numbers only!).
