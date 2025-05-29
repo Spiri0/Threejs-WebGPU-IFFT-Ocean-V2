@@ -31,7 +31,6 @@ export const ocean_material = (() => {
 			environmentTexture.minFilter = THREE.LinearFilter;
 			environmentTexture.magFilter = THREE.LinearFilter;
     
-			console.log(params.threejs.sceneDepthPassTexture);
 
             
 			const wgslShaderParams = {
