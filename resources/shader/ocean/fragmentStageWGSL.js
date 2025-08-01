@@ -20,7 +20,9 @@ export const fragmentStageWGSL = wgslFn(`
         jacobian0: texture_2d<f32>, 
         jacobian1: texture_2d<f32>,
         jacobian2: texture_2d<f32>,
-        ifft_sampler: sampler,
+        ifft_sampler0: sampler,
+        ifft_sampler1: sampler,
+        ifft_sampler2: sampler,
         waveLengths: vec4<f32>,
         ifftResolution: f32,
         foamStrength: f32,
@@ -40,13 +42,13 @@ export const fragmentStageWGSL = wgslFn(`
         var vViewDist = length(vViewVector);
         var viewDir = normalize(vViewVector);
 
-        var Normal_0: vec4<f32> = textureSample(derivatives0, ifft_sampler, (vMorphedPosition.xz/waveLengths.x)) * vCascadeScales.x;
-        var Normal_1: vec4<f32> = textureSample(derivatives1, ifft_sampler, (vMorphedPosition.xz/waveLengths.y)) * vCascadeScales.y;
-        var Normal_2: vec4<f32> = textureSample(derivatives2, ifft_sampler, (vMorphedPosition.xz/waveLengths.z)) * vCascadeScales.z;
+        var Normal_0: vec4<f32> = textureSample(derivatives0, ifft_sampler0, (vMorphedPosition.xz/waveLengths.x)) * vCascadeScales.x;
+        var Normal_1: vec4<f32> = textureSample(derivatives1, ifft_sampler1, (vMorphedPosition.xz/waveLengths.y)) * vCascadeScales.y;
+        var Normal_2: vec4<f32> = textureSample(derivatives2, ifft_sampler2, (vMorphedPosition.xz/waveLengths.z)) * vCascadeScales.z;
 
-        var jacobi0: f32 = textureSample(jacobian0, ifft_sampler, (vMorphedPosition.xz/waveLengths.x)).x;
-        var jacobi1: f32 = textureSample(jacobian1, ifft_sampler, (vMorphedPosition.xz/waveLengths.y)).x;
-        var jacobi2: f32 = textureSample(jacobian2, ifft_sampler, (vMorphedPosition.xz/waveLengths.z)).x;
+        var jacobi0: f32 = textureSample(jacobian0, ifft_sampler0, (vMorphedPosition.xz/waveLengths.x)).x;
+        var jacobi1: f32 = textureSample(jacobian1, ifft_sampler1, (vMorphedPosition.xz/waveLengths.y)).x;
+        var jacobi2: f32 = textureSample(jacobian2, ifft_sampler2, (vMorphedPosition.xz/waveLengths.z)).x;
         
         var derivatives: vec4<f32> = normalize(Normal_0 + Normal_1 + Normal_2 );
         var slope: vec2<f32> = vec2<f32>(derivatives.x / (1.0 + derivatives.z), derivatives.y / (1.0 + derivatives.w));
@@ -106,19 +108,14 @@ export const fragmentStageWGSL = wgslFn(`
         oceanColor = mix(SEACOLOR, oceanColor, vCascadeScales.x);
 
 
+        // Since the mipmaps quickly deplete over distance, a fog at that distance is necessary to avoid unsightly jitter. 
+        // This could, of course, be avoided by using longer wavelengths, which would, however, make the ocean very coarse at close range. 
+        // A sliding wavelength array for the three cascades would be a good solution. I'll test that out.
 
+        let fade = smoothstep( 500.0, 4000.0, vViewDist );
+        let finalColor = mix( oceanColor, vec3<f32>( 0.0, 0.1, 0.2 ), fade );
+        return vec4<f32>( finalColor, 1 );
 
-        return vec4<f32>(oceanColor, 1.0);
-        //return vec4<f32>(1) * foam_mix_factor;
-        //return Normal_1;
-        //return derivatives;
-        //return vec4<f32>(normalOcean, 1);
-        //return vec4<f32>(vViewVector, 1);
-        //return vec4<f32>(waterColor, 1);
-        //return vec4<f32>(vec3(1) * (-0.9-jakobian)*0.2, 1);
-        //return vec4<f32>(vPosition/100, 1);
-        //return vec4<f32>(r, g, b, 1.0);
-        //return vec4<f32>(1, 0, 0, 1.0);
     }
 
 
