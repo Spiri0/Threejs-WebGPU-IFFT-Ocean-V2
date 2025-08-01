@@ -42,6 +42,15 @@ class RTTNode extends TextureNode {
 		super( renderTarget.texture, uv() );
 
 		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
+		this.isRTTNode = true;
+
+		/**
 		 * The node to render a texture with.
 		 *
 		 * @type {Node}
@@ -131,7 +140,7 @@ class RTTNode extends TextureNode {
 	 * @readonly
 	 * @default true
 	 */
-	get autoSize() {
+	get autoResize() {
 
 		return this.width === null;
 
@@ -188,13 +197,21 @@ class RTTNode extends TextureNode {
 
 		//
 
-		if ( this.autoSize === true ) {
+		if ( this.autoResize === true ) {
 
-			this.pixelRatio = renderer.getPixelRatio();
-
+			const pixelRatio = renderer.getPixelRatio();
 			const size = renderer.getSize( _size );
 
-			this.setSize( size.width, size.height );
+			const effectiveWidth = size.width * pixelRatio;
+			const effectiveHeight = size.height * pixelRatio;
+
+			if ( effectiveWidth !== this.renderTarget.width || effectiveHeight !== this.renderTarget.height ) {
+
+				this.renderTarget.setSize( effectiveWidth, effectiveHeight );
+
+				this.textureNeedsUpdate = true;
+
+			}
 
 		}
 

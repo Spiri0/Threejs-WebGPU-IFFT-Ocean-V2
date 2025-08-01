@@ -3,15 +3,16 @@ import { materialLightMap } from '../../nodes/accessors/MaterialNode.js';
 import BasicEnvironmentNode from '../../nodes/lighting/BasicEnvironmentNode.js';
 import BasicLightMapNode from '../../nodes/lighting/BasicLightMapNode.js';
 import BasicLightingModel from '../../nodes/functions/BasicLightingModel.js';
-import { normalView } from '../../nodes/accessors/Normal.js';
+import { normalViewGeometry } from '../../nodes/accessors/Normal.js';
 import { diffuseColor } from '../../nodes/core/PropertyNode.js';
+import { directionToFaceDirection } from '../../nodes/display/FrontFacingNode.js';
 
 import { MeshBasicMaterial } from '../MeshBasicMaterial.js';
 
 const _defaultValues = /*@__PURE__*/ new MeshBasicMaterial();
 
 /**
- * Node material version of `MeshBasicMaterial`.
+ * Node material version of {@link MeshBasicMaterial}.
  *
  * @augments NodeMaterial
  */
@@ -26,7 +27,7 @@ class MeshBasicNodeMaterial extends NodeMaterial {
 	/**
 	 * Constructs a new mesh basic node material.
 	 *
-	 * @param {?Object} parameters - The configuration parameter.
+	 * @param {Object} [parameters] - The configuration parameter.
 	 */
 	constructor( parameters ) {
 
@@ -59,13 +60,13 @@ class MeshBasicNodeMaterial extends NodeMaterial {
 
 	/**
 	 * Basic materials are not affected by normal and bump maps so we
-	 * return by default {@link normalView}.
+	 * return by default {@link normalViewGeometry}.
 	 *
 	 * @return {Node<vec3>} The normal node.
 	 */
 	setupNormal() {
 
-		return normalView; // see #28839
+		return directionToFaceDirection( normalViewGeometry ); // see #28839
 
 	}
 

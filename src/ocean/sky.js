@@ -39,6 +39,7 @@ export const skybox = (() => {
 			material.colorNode = fragmentStageWGSL(wgslShaderParams);
 			//material.side = BackSide;
 			material.side = DoubleSide;
+			material.colorSpace = THREE.SRGBColorSpace;
 			//material.depthWrite = false;
 
 

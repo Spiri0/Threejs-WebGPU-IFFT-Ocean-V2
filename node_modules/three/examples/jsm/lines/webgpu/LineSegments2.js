@@ -94,8 +94,9 @@ function raycastWorldUnits( lineSegments, intersects ) {
 function raycastScreenSpace( lineSegments, camera, intersects ) {
 
 	const projectionMatrix = camera.projectionMatrix;
-	const resolution = lineSegments.resolution;
 	const matrixWorld = lineSegments.matrixWorld;
+
+	const resolution = lineSegments._resolution;
 
 	const geometry = lineSegments.geometry;
 	const instanceStart = geometry.attributes.instanceStart;
@@ -223,23 +224,56 @@ function raycastScreenSpace( lineSegments, camera, intersects ) {
 
 }
 
+/**
+ * A series of lines drawn between pairs of vertices.
+ *
+ * This adds functionality beyond {@link LineSegments}, like arbitrary line width and changing width
+ * to be in world units. {@link Line2} extends this object, forming a polyline instead of individual
+ * segments.
+ *
+ * This module can only be used with {@link WebGPURenderer}. When using {@link WebGLRenderer},
+ * import the class from `lines/LineSegments2.js`.
+ *
+ * @augments Mesh
+ * @three_import import { LineSegments2 } from 'three/addons/lines/webgpu/LineSegments2.js';
+ */
 class LineSegments2 extends Mesh {
 
+	/**
+	 * Constructs a new wide line.
+	 *
+	 * @param {LineSegmentsGeometry} [geometry] - The line geometry.
+	 * @param {Line2NodeMaterial} [material] - The line material.
+	 */
 	constructor( geometry = new LineSegmentsGeometry(), material = new Line2NodeMaterial( { color: Math.random() * 0xffffff } ) ) {
 
 		super( geometry, material );
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isLineSegments2 = true;
 
 		this.type = 'LineSegments2';
 
-		this.resolution = new Vector2();
+		this._resolution = new Vector2();
 
 	}
 
-	// for backwards-compatibility, but could be a method of LineSegmentsGeometry...
-
+	/**
+	 * Computes an array of distance values which are necessary for rendering dashed lines.
+	 * For each vertex in the geometry, the method calculates the cumulative length from the
+	 * current point to the very beginning of the line.
+	 *
+	 * @return {LineSegments2} A reference to this instance.
+	 */
 	computeLineDistances() {
+
+		// for backwards-compatibility, but could be a method of LineSegmentsGeometry...
 
 		const geometry = this.geometry;
 
@@ -269,10 +303,16 @@ class LineSegments2 extends Mesh {
 	onBeforeRender( renderer ) {
 
 		renderer.getViewport( _viewport );
-		this.resolution.set( _viewport.z, _viewport.w );
+		this._resolution.set( _viewport.z, _viewport.w );
 
 	}
 
+	/**
+	 * Computes intersection points between a casted ray and this instance.
+	 *
+	 * @param {Raycaster} raycaster - The raycaster.
+	 * @param {Array<Object>} intersects - The target array that holds the intersection points.
+	 */
 	raycast( raycaster, intersects ) {
 
 		const worldUnits = this.material.worldUnits;
@@ -312,7 +352,7 @@ class LineSegments2 extends Mesh {
 		} else {
 
 			const distanceToSphere = Math.max( camera.near, _sphere.distanceToPoint( _ray.origin ) );
-			sphereMargin = getWorldSpaceHalfWidth( camera, distanceToSphere, this.resolution );
+			sphereMargin = getWorldSpaceHalfWidth( camera, distanceToSphere, this._resolution );
 
 		}
 
@@ -342,7 +382,7 @@ class LineSegments2 extends Mesh {
 		} else {
 
 			const distanceToBox = Math.max( camera.near, _box.distanceToPoint( _ray.origin ) );
-			boxMargin = getWorldSpaceHalfWidth( camera, distanceToBox, this.resolution );
+			boxMargin = getWorldSpaceHalfWidth( camera, distanceToBox, this._resolution );
 
 		}
 

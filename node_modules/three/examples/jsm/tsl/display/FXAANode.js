@@ -6,6 +6,7 @@ import { nodeObject, Fn, uniformArray, select, float, NodeUpdateType, uv, dot, c
  * so tone mapping and color space conversion must happen before the anti-aliasing.
  *
  * @augments TempNode
+ * @three_import import { fxaa } from 'three/addons/tsl/display/FXAANode.js';
  */
 class FXAANode extends TempNode {
 
@@ -122,8 +123,8 @@ class FXAANode extends TempNode {
 			const se = SampleLuminanceOffset( texSize, uv, 1.0, 1.0 );
 			const sw = SampleLuminanceOffset( texSize, uv, - 1.0, 1.0 );
 
-			const highest = max( max( max( max( s, e ), n ), w ), m );
-			const lowest = min( min( min( min( s, e ), n ), w ), m );
+			const highest = max( s, e, n, w, m );
+			const lowest = min( s, e, n, w, m );
 			const contrast = highest.sub( lowest );
 
 			return { m, n, e, s, w, ne, nw, se, sw, highest, lowest, contrast };

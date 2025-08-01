@@ -42,7 +42,7 @@ class InitialSpectrum extends entity.Component {
 			boundaryHigh: uniform(params.boundaryHigh),
 			...params.waveSettings
 		}).compute( this.sqSize );
-		params.renderer.compute(this.initialSpectrum, this.defaultWorkgroup);
+		params.renderer.compute(this.initialSpectrum);
 	}
         
 
@@ -53,13 +53,13 @@ class InitialSpectrum extends entity.Component {
 			index: instanceIndex,
 			size: params.size,
 		}).compute( this.sqSize );
-		params.renderer.compute(this.initialSpectrumWithInverse, this.defaultWorkgroup);
+		params.renderer.compute(this.initialSpectrumWithInverse);
 	}
 
 
 	Update() {
-		this.params_.renderer.compute(this.initialSpectrum, this.defaultWorkgroup);
-		this.params_.renderer.compute(this.initialSpectrumWithInverse, this.defaultWorkgroup);
+		this.params_.renderer.compute(this.initialSpectrum);
+		this.params_.renderer.compute(this.initialSpectrumWithInverse);
 	}
 
 }

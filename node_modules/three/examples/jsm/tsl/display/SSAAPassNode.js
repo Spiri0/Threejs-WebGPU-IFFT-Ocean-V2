@@ -1,5 +1,5 @@
 import { AdditiveBlending, Color, Vector2, RendererUtils, PassNode, QuadMesh, NodeMaterial } from 'three/webgpu';
-import { nodeObject, uniform, mrt, texture, getTextureIndex } from 'three/tsl';
+import { nodeObject, uniform, mrt, texture, getTextureIndex, unpremultiplyAlpha } from 'three/tsl';
 
 const _size = /*@__PURE__*/ new Vector2();
 
@@ -15,6 +15,7 @@ let _rendererState;
  * Reference: {@link https://en.wikipedia.org/wiki/Supersampling}
  *
  * @augments PassNode
+ * @three_import import { ssaaPass } from 'three/addons/tsl/display/SSAAPassNode.js';
  */
 class SSAAPassNode extends PassNode {
 
@@ -113,7 +114,7 @@ class SSAAPassNode extends PassNode {
 		const { renderer } = frame;
 		const { scene, camera } = this;
 
-		_rendererState = RendererUtils.resetRendererAndSceneState( renderer, scene, _rendererState );
+		_rendererState = RendererUtils.resetRendererState( renderer, _rendererState );
 
 		//
 
@@ -229,7 +230,7 @@ class SSAAPassNode extends PassNode {
 
 		//
 
-		RendererUtils.restoreRendererAndSceneState( renderer, scene, _rendererState );
+		RendererUtils.restoreRendererState( renderer, _rendererState );
 
 	}
 
@@ -276,7 +277,7 @@ class SSAAPassNode extends PassNode {
 		}
 
 		this._quadMesh.material = new NodeMaterial();
-		this._quadMesh.material.fragmentNode = sampleTexture;
+		this._quadMesh.material.fragmentNode = unpremultiplyAlpha( sampleTexture );
 		this._quadMesh.material.transparent = true;
 		this._quadMesh.material.depthTest = false;
 		this._quadMesh.material.depthWrite = false;

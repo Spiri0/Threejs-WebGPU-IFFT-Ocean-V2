@@ -14,25 +14,27 @@ export const IFFT_InitWGSL = wgslFn(`
 		index: u32,
 		size: u32,
 		step: u32,
-		logN: u32
+		logN: u32,
+		workgroupSize: vec2<u32>,
+		workgroupId: vec3<u32>,
+		localId: vec3<u32>
 	) -> void {
 
-		var posX = index % size;
-		var posY = index / size;
+		let pos = workgroupSize.xy * workgroupId.xy + localId.xy;
 
-		let butterflyIndex = posX * logN + step;
-		let data = butterflyBuffer[butterflyIndex];
+		let butterflyIndex = pos.x * logN + step;
+		let data = butterflyBuffer[ butterflyIndex ];
 
-		let bufferIndex = posY * size + u32(data.z);
-		let bufferIndexOdd = posY * size + u32(data.w);
+		let bufferIndex = pos.y * size + u32( data.z );
+		let bufferIndexOdd = pos.y * size + u32( data.w );
 
-		var even = select(DxDzBuffer[bufferIndex], DyDxzBuffer[bufferIndex], initBufferIndex == 1u);
-		even = select(even, DyxDyzBuffer[bufferIndex], initBufferIndex == 2u);
-		even = select(even, DxxDzzBuffer[bufferIndex], initBufferIndex == 3u);
+		var even = select(DxDzBuffer[ bufferIndex ], DyDxzBuffer[ bufferIndex ], initBufferIndex == 1u );
+		even = select(even, DyxDyzBuffer[ bufferIndex ], initBufferIndex == 2u );
+		even = select(even, DxxDzzBuffer[ bufferIndex ], initBufferIndex == 3u );
 
-		var odd = select(DxDzBuffer[bufferIndexOdd], DyDxzBuffer[bufferIndexOdd], initBufferIndex == 1u);
-		odd = select(odd, DyxDyzBuffer[bufferIndexOdd], initBufferIndex == 2u);
-		odd = select(odd, DxxDzzBuffer[bufferIndexOdd], initBufferIndex == 3u);
+		var odd = select( DxDzBuffer[ bufferIndexOdd ], DyDxzBuffer[ bufferIndexOdd ], initBufferIndex == 1u );
+		odd = select(odd, DyxDyzBuffer[ bufferIndexOdd ], initBufferIndex == 2u );
+		odd = select(odd, DxxDzzBuffer[ bufferIndexOdd ], initBufferIndex == 3u );
 
 		var H: vec2<f32> = even + multiplyComplex( vec2<f32>( data.r, -data.g ), odd );
 

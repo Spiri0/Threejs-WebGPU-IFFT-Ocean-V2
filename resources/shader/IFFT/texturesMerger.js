@@ -15,14 +15,15 @@ export const TexturesMergerWGSL = wgslFn(`
 		index: u32,
 		size: u32,
 		lambda: f32,
-		deltaTime: f32
+		deltaTime: f32,
+		workgroupSize: vec2<u32>,
+		workgroupId: vec3<u32>,
+		localId: vec3<u32>,
 	) -> void {
 
-		var posX = index % size;
-		var posY = index / size;
-		var idx = vec2u(posX, posY);
+		let pos = workgroupSize.xy * workgroupId.xy + localId.xy;
  
-		let bufferIndex = posY * size + posX;
+		let bufferIndex = pos.y * size + pos.x;
 
 		var x = DxDzBuffer[bufferIndex];
 		var y = DyDxzBuffer[bufferIndex];
@@ -38,9 +39,9 @@ export const TexturesMergerWGSL = wgslFn(`
 		var turbulence = turbulenceBuffer[bufferIndex] + deltaTime * 0.5 / max(jacobian, 0.5);
 		turbulence = min(jacobian, turbulence);
 
-		textureStore(writeDisplacement, idx, vec4f(lambda * x.x, y.x, lambda * x.y, 0));
-		textureStore(writeDerivative, idx, vec4f(z.x, z.y, w.x * lambda, w.y * lambda));
-		textureStore(writeJacobian, idx, vec4f(turbulence, 0, 0, 0));
+		textureStore(writeDisplacement, pos, vec4f(lambda * x.x, y.x, lambda * x.y, 0));
+		textureStore(writeDerivative, pos, vec4f(z.x, z.y, w.x * lambda, w.y * lambda));
+		textureStore(writeJacobian, pos, vec4f(turbulence, 0, 0, 0));
 		turbulenceBuffer[bufferIndex] = turbulence;
 
 	}

@@ -16,7 +16,7 @@ export const wave_generator = (() => {
 		async Init(params) {
 			this.params_ = params;
  
-			this.size = wave_constants.TEXTURE_SIZE;
+			this.size = wave_constants.IFFT_RESOLUTION;
 
 			this.butterflyBuffer = new THREE.StorageBufferAttribute( new Float32Array( Math.log2( this.size ) * this.size * 4 ), 4 );
 
@@ -26,7 +26,7 @@ export const wave_generator = (() => {
 				index: instanceIndex,
 				N: this.size,
 			}).compute(Math.log2(this.size) * this.size);
-			params.renderer.compute(this.butterfly, [1, 8, 1]);
+			params.renderer.compute(this.butterfly);
 
 
 			this.waveSettings = {
@@ -119,9 +119,9 @@ export const wave_generator = (() => {
 		}
 
 
-		async Update_(dt) {
+		Update_(dt) {
 			for(let i = 0; i < this.cascades.length; i++){
-				await this.cascades[i].Update(dt);
+				this.cascades[i].Update(dt);
 			}
 		}
 

@@ -10,8 +10,28 @@ import {
 import { texture as textureNode, cubeTexture, texture3D, float, vec4, attribute } from 'three/tsl';
 import { mergeGeometries } from '../utils/BufferGeometryUtils.js';
 
+/**
+ * A helper that can be used to display any type of texture for
+ * debugging purposes. Depending on the type of texture (2D, 3D, Array),
+ * the helper becomes a plane or box mesh.
+ *
+ * This helper can only be used with {@link WebGPURenderer}.
+ * When using {@link WebGLRenderer}, import from `TextureHelper.js`.
+ *
+ * @private
+ * @augments Mesh
+ * @three_import import { TextureHelper } from 'three/addons/helpers/TextureHelperGPU.js';
+ */
 class TextureHelper extends Mesh {
 
+	/**
+	 * Constructs a new texture helper.
+	 *
+	 * @param {Texture} texture - The texture to visualize.
+	 * @param {number} [width=1] - The helper's width.
+	 * @param {number} [height=1] - The helper's height.
+	 * @param {number} [depth=1] - The helper's depth.
+	 */
 	constructor( texture, width = 1, height = 1, depth = 1 ) {
 
 		const material = new NodeMaterial();
@@ -31,7 +51,7 @@ class TextureHelper extends Mesh {
 
 			colorNode = texture3D( texture ).sample( uvw );
 
-		} else if ( texture.isDataArrayTexture || texture.isCompressedArrayTexture ) {
+		} else if ( texture.isArrayTexture || texture.isDataArrayTexture || texture.isCompressedArrayTexture ) {
 
 			colorNode = textureNode( texture ).sample( uvw.xy ).depth( uvw.z );
 
@@ -51,11 +71,20 @@ class TextureHelper extends Mesh {
 
 		super( geometry, material );
 
+		/**
+		 * The texture to visualize.
+		 *
+		 * @type {Texture}
+		 */
 		this.texture = texture;
 		this.type = 'TextureHelper';
 
 	}
 
+	/**
+	 * Frees the GPU-related resources allocated by this instance. Call this
+	 * method whenever this instance is no longer used in your app.
+	 */
 	dispose() {
 
 		this.geometry.dispose();
@@ -71,7 +100,7 @@ function getImageCount( texture ) {
 
 		return 6;
 
-	} else if ( texture.isDataArrayTexture || texture.isCompressedArrayTexture ) {
+	} else if ( texture.isArrayTexture || texture.isDataArrayTexture || texture.isCompressedArrayTexture ) {
 
 		return texture.image.depth;
 
@@ -93,7 +122,7 @@ function getAlpha( texture ) {
 
 		return 1;
 
-	} else if ( texture.isDataArrayTexture || texture.isCompressedArrayTexture ) {
+	} else if ( texture.isArrayTexture || texture.isDataArrayTexture || texture.isCompressedArrayTexture ) {
 
 		return Math.max( 1 / texture.image.depth, 0.25 );
 
@@ -163,7 +192,7 @@ function createSliceGeometry( texture, width, height, depth ) {
 			const v = texture.flipY ? uv.getY( j ) : 1 - uv.getY( j );
 			const w = sliceCount === 1
 				? 1
-				: texture.isDataArrayTexture || texture.isCompressedArrayTexture
+				: texture.isArrayTexture || texture.isDataArrayTexture || texture.isCompressedArrayTexture
 					? i
 					: i / ( sliceCount - 1 );
 

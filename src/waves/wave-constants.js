@@ -42,7 +42,7 @@ export const wave_constants = (() => {
 		d_shortWaveFade: uniform(0.0),
 		d_fadeLimit: uniform(0.0),
 	}
-		
+
 	const SECOND_WAVE_BORDERS = {
 		d_depth: {min: 0.1, max: 100.0},
 		d_scaleHeight: {min: 0.0, max: 1.0},
@@ -55,10 +55,10 @@ export const wave_constants = (() => {
 		d_shortWaveFade: {min: 0.0, max: 5.0},
 		d_fadeLimit: {min: 0.0, max: 1.0},
 	}
-		
+
 	return {
-		DEFAULT_WORKGROUP: [8, 8, 8],
-		TEXTURE_SIZE: 512,
+		WORKGROUP: [ 16, 16, 1 ],
+		IFFT_RESOLUTION: 512,
 		LENGTH_SCALES: [ 250, 17, 5 ],
 		LAMBDA: [ 0.9, 0.9, 0.9 ],
 		FOAM_STRENGTH: uniform(0.8),

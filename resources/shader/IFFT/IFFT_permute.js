@@ -12,13 +12,15 @@ export const IFFT_PermuteWGSL = wgslFn(`
 		initBufferIndex: u32,
 		index: u32,
 		size: u32,
+		workgroupSize: vec2<u32>,
+		workgroupId: vec3<u32>,
+		localId: vec3<u32>,
 	) -> void {
 
-		var posX = index % size;
-		var posY = index / size;
+		let pos = workgroupSize.xy * workgroupId.xy + localId.xy;
 
-		var input = pingpongBuffer[ index ].xy;
-		var output = input * (1.0 - 2.0 * f32((posX + posY) % 2));
+		let input = pingpongBuffer[ index ].xy;
+		let output = input * ( 1.0 - 2.0 * f32( ( pos.x + pos.y ) % 2 ) );
 
 		DxDzBuffer[ index ] = select( DxDzBuffer[index], output, initBufferIndex == 0u );
 		DyDxzBuffer[ index ] = select( DyDxzBuffer[index], output, initBufferIndex == 1u );
@@ -28,4 +30,3 @@ export const IFFT_PermuteWGSL = wgslFn(`
 	} 
 
 `);
-

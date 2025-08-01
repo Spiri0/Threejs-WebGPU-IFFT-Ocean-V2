@@ -71,7 +71,7 @@ class InstancedMesh extends Mesh {
 		 * {@link Texture#needsUpdate} flag to true if you modify instanced data
 		 * via {@link InstancedMesh#setMorphAt}.
 		 *
-		 * @type {?InstancedBufferAttribute}
+		 * @type {?DataTexture}
 		 * @default null
 		 */
 		this.morphTexture = null;
@@ -321,7 +321,7 @@ class InstancedMesh extends Mesh {
 	 * {@link InstancedMesh#instanceMatrix} to `true` after updating all the colors.
 	 *
 	 * @param {number} index - The instance index.
-	 * @param {Matrix4} matrix - The the local transformation.
+	 * @param {Matrix4} matrix - The local transformation.
 	 */
 	setMatrixAt( index, matrix ) {
 

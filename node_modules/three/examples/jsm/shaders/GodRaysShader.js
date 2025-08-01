@@ -4,6 +4,11 @@ import {
 } from 'three';
 
 /**
+ * @module GodRaysShader
+ * @three_import import * as GodRaysShader from 'three/addons/shaders/GodRaysShader.js';
+ */
+
+/**
  * God-rays (crepuscular rays)
  *
  * Similar implementation to the one used by Crytek for CryEngine 2 [Sousa2008].
@@ -17,10 +22,11 @@ import {
  * 6*6*6 = 216 samples.
  *
  * References:
+ * - [Sousa2008, Crysis Next Gen Effects, GDC2008]{@link http://www.crytek.com/sites/default/files/GDC08_SousaT_CrysisEffects.ppt}.
  *
- * Sousa2008 - Crysis Next Gen Effects, GDC2008, http://www.crytek.com/sites/default/files/GDC08_SousaT_CrysisEffects.ppt
+ * @constant
+ * @type {ShaderMaterial~Shader}
  */
-
 const GodRaysDepthMaskShader = {
 
 	name: 'GodRaysDepthMaskShader',
@@ -72,8 +78,10 @@ const GodRaysDepthMaskShader = {
  *
  * The results of the previous pass are re-blurred, each time with a
  * decreased distance between samples.
+ *
+ * @constant
+ * @type {ShaderMaterial~Shader}
  */
-
 const GodRaysGenerateShader = {
 
 	name: 'GodRaysGenerateShader',
@@ -194,8 +202,10 @@ const GodRaysGenerateShader = {
 /**
  * Additively applies god rays from texture tGodRays to a background (tColors).
  * fGodRayIntensity attenuates the god rays.
+ *
+ * @constant
+ * @type {ShaderMaterial~Shader}
  */
-
 const GodRaysCombineShader = {
 
 	name: 'GodRaysCombineShader',
@@ -253,8 +263,10 @@ const GodRaysCombineShader = {
 /**
  * A dodgy sun/sky shader. Makes a bright spot at the sun location. Would be
  * cheaper/faster/simpler to implement this as a simple sun sprite.
+ *
+ * @constant
+ * @type {Object}
  */
-
 const GodRaysFakeSunShader = {
 
 	name: 'GodRaysFakeSunShader',

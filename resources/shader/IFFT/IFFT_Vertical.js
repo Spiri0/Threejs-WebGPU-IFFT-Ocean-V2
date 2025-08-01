@@ -1,6 +1,6 @@
 import {wgslFn} from "three/tsl";
 
-
+//		index: u32,
 export const IFFT_VerticalWGSL = wgslFn(`
 
 	fn computeWGSL(
@@ -12,25 +12,27 @@ export const IFFT_VerticalWGSL = wgslFn(`
 		step: u32,
 		logN: u32,
 		pingpong: u32,
+		workgroupSize: vec2<u32>,
+		workgroupId: vec3<u32>,
+		localId: vec3<u32>,
 	) -> void {
 
-		var posX = index % size;
-		var posY = index / size;
+		let pos = workgroupSize.xy * workgroupId.xy + localId.xy;
 
-		let butterflyIndex = posY * logN + step;
-		let data = butterflyBuffer[butterflyIndex];
+		let butterflyIndex = pos.y * logN + step;
+		let data = butterflyBuffer[ butterflyIndex ];
 
-		let bufferIndexEven = u32(data.z) * size + posX;
-		let bufferIndexOdd = u32(data.w) * size + posX;
+		let bufferIndexEven = u32( data.z ) * size + pos.x;
+		let bufferIndexOdd = u32( data.w ) * size + pos.x;
 
-		var even = select(pingpongBuffer[bufferIndexEven].xy, pingpongBuffer[bufferIndexEven].zw, pingpong == 0);
-		var odd  = select(pingpongBuffer[bufferIndexOdd].xy, pingpongBuffer[bufferIndexOdd].zw, pingpong == 0);
+		let even = select(pingpongBuffer[ bufferIndexEven ].xy, pingpongBuffer[ bufferIndexEven ].zw, pingpong == 0 );
+		let odd  = select(pingpongBuffer[ bufferIndexOdd ].xy, pingpongBuffer[ bufferIndexOdd ].zw, pingpong == 0 );
 
-		var H: vec2<f32> = even + multiplyComplex( data.rg, odd );
+		let H: vec2<f32> = even + multiplyComplex( data.rg, odd );
 
-		pingpongBuffer[index] = vec4<f32>(
-			select(pingpongBuffer[index].xy, H, pingpong == 0),
-			select(H, pingpongBuffer[index].zw, pingpong == 0)
+		pingpongBuffer[ index ] = vec4<f32>(
+			select( pingpongBuffer[ index ].xy, H, pingpong == 0 ),
+			select( H, pingpongBuffer[ index ].zw, pingpong == 0 )
 		);
 
 	}

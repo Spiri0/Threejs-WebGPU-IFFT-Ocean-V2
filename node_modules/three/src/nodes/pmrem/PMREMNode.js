@@ -348,7 +348,7 @@ export default PMREMNode;
  * Returns `true` if the given cube map image has been fully loaded.
  *
  * @private
- * @param {Array<(Image|Object)>} image - The cube map image.
+ * @param {?Array<(Image|Object)>} [image] - The cube map image.
  * @return {boolean} Whether the given cube map is ready or not.
  */
 function isCubeMapReady( image ) {
@@ -390,8 +390,8 @@ function isEquirectangularMapReady( image ) {
  * @tsl
  * @function
  * @param {Texture} value - The input texture.
- * @param {Node<vec2>} [uvNode=null] - The uv node.
- * @param {Node<float>} [levelNode=null] - The level node.
+ * @param {?Node<vec2>} [uvNode=null] - The uv node.
+ * @param {?Node<float>} [levelNode=null] - The level node.
  * @returns {PMREMNode}
  */
-export const pmremTexture = /*@__PURE__*/ nodeProxy( PMREMNode );
+export const pmremTexture = /*@__PURE__*/ nodeProxy( PMREMNode ).setParameterLength( 1, 3 );

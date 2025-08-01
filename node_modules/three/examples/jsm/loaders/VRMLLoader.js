@@ -36,15 +36,40 @@ import {
 } from 'three';
 import chevrotain from '../libs/chevrotain.module.min.js';
 
-
+/**
+ * A loader for the VRML format.
+ *
+ * ```js
+ * const loader = new VRMLLoader();
+ * const object = await loader.loadAsync( 'models/vrml/house.wrl' );
+ * scene.add( object );
+ * ```
+ *
+ * @augments Loader
+ * @three_import import { VRMLLoader } from 'three/addons/loaders/VRMLLoader.js';
+ */
 class VRMLLoader extends Loader {
 
+	/**
+	 * Constructs a new VRML loader.
+	 *
+	 * @param {LoadingManager} [manager] - The loading manager.
+	 */
 	constructor( manager ) {
 
 		super( manager );
 
 	}
 
+	/**
+	 * Starts loading from the given URL and passes the loaded VRML asset
+	 * to the `onLoad()` callback.
+	 *
+	 * @param {string} url - The path/URL of the file to be loaded. This can also be a data URI.
+	 * @param {function(Scene)} onLoad - Executed when the loading process has been finished.
+	 * @param {onProgressCallback} onProgress - Executed while the loading is in progress.
+	 * @param {onErrorCallback} onError - Executed when errors occur.
+	 */
 	load( url, onLoad, onProgress, onError ) {
 
 		const scope = this;
@@ -81,6 +106,13 @@ class VRMLLoader extends Loader {
 
 	}
 
+	/**
+	 * Parses the given VRML data and returns the resulting scene.
+	 *
+	 * @param {string} data - The raw VRML data as a string.
+	 * @param {string} path - The URL base path.
+	 * @return {Scene} The parsed scene.
+	 */
 	parse( data, path ) {
 
 		const nodeMap = {};
@@ -3109,7 +3141,7 @@ class VRMLLoader extends Loader {
 
 				color.fromBufferAttribute( attribute, i );
 
-				ColorManagement.toWorkingColorSpace( color, SRGBColorSpace );
+				ColorManagement.colorSpaceToWorking( color, SRGBColorSpace );
 
 				attribute.setXYZ( i, color.r, color.g, color.b );
 
@@ -3216,7 +3248,7 @@ class VRMLLoader extends Loader {
 
 				color.copy( colorA ).lerp( colorB, t );
 
-				ColorManagement.toWorkingColorSpace( color, SRGBColorSpace );
+				ColorManagement.colorSpaceToWorking( color, SRGBColorSpace );
 
 				colorAttribute.setXYZ( index, color.r, color.g, color.b );
 

@@ -1,5 +1,5 @@
 import {THREE} from '../three-defs.js';
-import {textureStore, instanceIndex, uniform, texture, uint, storage } from "three/tsl";
+import {textureStore, instanceIndex, uniform, uint, storage, workgroupId, localId } from "three/tsl";
 import {entity} from '../entity.js';
 import InitialSpectrum from './initial-spectrum.js';
 import {TimeSpectrumWGSL} from "../../resources/shader/IFFT/timeSpectrum.js";
@@ -75,6 +75,10 @@ class WaveCascade extends entity.Component {
 		this.jacobian.anisotropy = this.params_.renderer.getMaxAnisotropy();
 
 
+		this.workgroupSize = wave_constants.WORKGROUP;
+		this.dispatchSize = [ params.size / this.workgroupSize[ 0 ], params.size / this.workgroupSize[ 1 ] ];
+
+
 		this.computeTimeSpectrum = TimeSpectrumWGSL({ 
 			writeDxDzBuffer: storage( this.DxDzBuffer, 'vec2', this.DxDzBuffer.count ),
 			writeDyDxzBuffer: storage( this.DyDxzBuffer, 'vec2', this.DyDxzBuffer.count ),
@@ -85,7 +89,7 @@ class WaveCascade extends entity.Component {
 			index: instanceIndex,
 			size: uint( params.size ),
 			time: uniform(0)
-		}).compute( this.sqSize );
+		}).computeKernel( this.workgroupSize );
   
 
 		this.computeInitialize = IFFT_InitWGSL({ 
@@ -99,8 +103,11 @@ class WaveCascade extends entity.Component {
 			DxxDzzBuffer: storage( this.DxxDzzBuffer, 'vec2', this.DxxDzzBuffer.count ).toReadOnly(),
 			pingpongBuffer: storage( this.pingpongBuffer, 'vec4', this.pingpongBuffer.count ),
 			initBufferIndex: uint( this.DDindex ),
-			index: instanceIndex 
-		}).compute( this.sqSize );
+			index: instanceIndex,
+			workgroupSize: uniform( new THREE.Vector2().fromArray( this.workgroupSize ) ),
+			workgroupId: workgroupId, 
+			localId: localId			
+		}).computeKernel( this.workgroupSize );
 
 
 		this.computeHorizontalPingPong = IFFT_HorizontalWGSL({ 
@@ -111,8 +118,11 @@ class WaveCascade extends entity.Component {
 			pingpongBuffer: storage( this.pingpongBuffer, 'vec4', this.pingpongBuffer.count ),
 			initBufferIndex: uint( this.DDindex ),
 			pingpong: uint( this.pingpong ),
-			index: instanceIndex 
-		}).compute( this.sqSize );
+			index: instanceIndex,
+			workgroupSize: uniform( new THREE.Vector2().fromArray( this.workgroupSize ) ),
+			workgroupId: workgroupId, 
+			localId: localId
+		}).computeKernel( this.workgroupSize );
 
 
 		this.computeVerticalPingPong = IFFT_VerticalWGSL({
@@ -123,8 +133,11 @@ class WaveCascade extends entity.Component {
 			pingpongBuffer: storage( this.pingpongBuffer, 'vec4', this.pingpongBuffer.count ),
 			initBufferIndex: uint( this.DDindex ),
 			pingpong: uint( this.pingpong ),
-			index: instanceIndex 
-		}).compute( this.sqSize );
+			index: instanceIndex,
+			workgroupSize: uniform( new THREE.Vector2().fromArray( this.workgroupSize ) ),
+			workgroupId: workgroupId, 
+			localId: localId
+		}).computeKernel( this.workgroupSize );
 
 
 		this.computePermute = IFFT_PermuteWGSL({ 
@@ -135,8 +148,11 @@ class WaveCascade extends entity.Component {
 			DyxDyzBuffer: storage( this.DyxDyzBuffer, 'vec2', this.DyxDyzBuffer.count ),
 			DxxDzzBuffer: storage( this.DxxDzzBuffer, 'vec2', this.DxxDzzBuffer.count ),
 			initBufferIndex: uint( this.DDindex ),
-			index: instanceIndex 
-		}).compute( this.sqSize );
+			index: instanceIndex,
+			workgroupSize: uniform( new THREE.Vector2().fromArray( this.workgroupSize ) ),
+			workgroupId: workgroupId, 
+			localId: localId
+		}).computeKernel( this.workgroupSize );
 
 
 		this.computeMergeTextures = TexturesMergerWGSL({ 
@@ -152,41 +168,45 @@ class WaveCascade extends entity.Component {
 			writeDisplacement: textureStore(this.displacement),
 			writeDerivative: textureStore(this.derivative),
 			writeJacobian: textureStore(this.jacobian),
-		}).compute( this.sqSize );
+			workgroupSize: uniform( new THREE.Vector2().fromArray( this.workgroupSize ) ),
+			workgroupId: workgroupId, 
+			localId: localId
+		}).computeKernel( this.workgroupSize );
 
 	}
 
 
-	async Update(dt){
+	Update( dt ) {
 
 		this.computeTimeSpectrum.computeNode.parameters.time.value = performance.now() / 1000;
-		await this.params_.renderer.computeAsync(this.computeTimeSpectrum, this.defaultWorkgroup);
 
-		await this.IFFT( 0 );	//DxDz
-		await this.IFFT( 1 );	//DyDxz
-		await this.IFFT( 2 );	//DyxDyz
-		await this.IFFT( 3 );	//DxxDzz
+		this.params_.renderer.compute(this.computeTimeSpectrum, this.dispatchSize );
+
+		this.IFFT( 0 );	//DxDz
+		this.IFFT( 1 );	//DyDxz
+		this.IFFT( 2 );	//DyxDyz
+		this.IFFT( 3 );	//DxxDzz
 
 		this.deltaTime.value = dt;
-		await this.params_.renderer.computeAsync(this.computeMergeTextures, this.defaultWorkgroup);
+		this.params_.renderer.compute(this.computeMergeTextures, this.dispatchSize );
 
 	}
 
 
-	async IFFT( index ){
+	IFFT( index ) {
 
 		this.DDindex.value = index;
 		let pingpong = true;
 
 		this.ifftStep.value = 0;
-		await this.params_.renderer.computeAsync( this.computeInitialize, this.defaultWorkgroup );
+		this.params_.renderer.compute( this.computeInitialize, this.dispatchSize );
 
 		for(let i = 1; i < this.logN; i++){
 
 			pingpong = !pingpong;
 			this.ifftStep.value = i;
 			this.pingpong.value = pingpong ? 1 : 0;
-			await this.params_.renderer.computeAsync( this.computeHorizontalPingPong, this.defaultWorkgroup );
+			this.params_.renderer.compute( this.computeHorizontalPingPong, this.dispatchSize );
 
 		}
 		for(let i = 0; i < this.logN; i++){
@@ -194,10 +214,10 @@ class WaveCascade extends entity.Component {
 			pingpong = !pingpong;
 			this.ifftStep.value = i;
 			this.pingpong.value = pingpong ? 1 : 0;
-			await this.params_.renderer.computeAsync( this.computeVerticalPingPong, this.defaultWorkgroup );
+			this.params_.renderer.compute( this.computeVerticalPingPong, this.dispatchSize );
 		}
 
-		await this.params_.renderer.computeAsync( this.computePermute, this.defaultWorkgroup );
+		this.params_.renderer.compute( this.computePermute, this.dispatchSize );
  
 	}
 

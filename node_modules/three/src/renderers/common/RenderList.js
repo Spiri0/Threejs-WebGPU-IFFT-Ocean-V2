@@ -19,10 +19,6 @@ function painterSortStable( a, b ) {
 
 		return a.renderOrder - b.renderOrder;
 
-	} else if ( a.material.id !== b.material.id ) {
-
-		return a.material.id - b.material.id;
-
 	} else if ( a.z !== b.z ) {
 
 		return a.z - b.z;
@@ -356,8 +352,8 @@ class RenderList {
 	/**
 	 * Sorts the internal render lists.
 	 *
-	 * @param {function(any, any): number} customOpaqueSort - A custom sort function for opaque objects.
-	 * @param {function(any, any): number} customTransparentSort -  A custom sort function for transparent objects.
+	 * @param {?function(any, any): number} customOpaqueSort - A custom sort function for opaque objects.
+	 * @param {?function(any, any): number} customTransparentSort -  A custom sort function for transparent objects.
 	 */
 	sort( customOpaqueSort, customTransparentSort ) {
 
